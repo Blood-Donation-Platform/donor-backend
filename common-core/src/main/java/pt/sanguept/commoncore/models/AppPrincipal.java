@@ -1,10 +1,10 @@
-package pt.sanguept.commoninfra.models;
+package pt.sanguept.commoncore.models;
 
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import pt.sanguept.commoninfra.interfaces.AuthenticatedPrincipal;
+import pt.sanguept.commoncore.interfaces.AuthenticatedPrincipal;
 
 import java.util.Collection;
 

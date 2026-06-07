@@ -1,4 +1,4 @@
-package pt.sanguept.commoninfra.enums;
+package pt.sanguept.commoncore.enums;
 
 public enum EntityStatus {
     ACTIVE,

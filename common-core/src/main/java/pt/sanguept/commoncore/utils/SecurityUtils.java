@@ -1,10 +1,10 @@
-package pt.sanguept.commoninfra.utils;
+package pt.sanguept.commoncore.utils;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import pt.sanguept.commoninfra.interfaces.AuthenticatedPrincipal;
-import pt.sanguept.commoninfra.models.AppPrincipal;
+import pt.sanguept.commoncore.interfaces.AuthenticatedPrincipal;
+import pt.sanguept.commoncore.models.AppPrincipal;
 
 import java.util.Optional;
 
