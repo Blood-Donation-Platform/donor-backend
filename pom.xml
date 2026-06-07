@@ -24,6 +24,9 @@
     <modules>
         <module>application</module>
 	    <module>territory</module>
+	    <module>common-core</module>
+	    <module>common-infra</module>
+	    <module>common-web</module>
 	</modules>
     <scm>
 		<connection/>
