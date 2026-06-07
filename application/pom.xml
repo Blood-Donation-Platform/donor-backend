@@ -28,6 +28,16 @@
             <artifactId>common-infra</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>common-web</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>territory</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
