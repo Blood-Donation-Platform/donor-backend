@@ -17,4 +17,32 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-spatial</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.locationtech.jts.io</groupId>
+            <artifactId>jts-io-common</artifactId>
+            <version>1.20.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>common-core</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>common-web</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>common-infra</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+    </dependencies>
+
 </project>
