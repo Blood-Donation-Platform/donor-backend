@@ -8,7 +8,6 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.springframework.stereotype.Component;
 import pt.sanguept.territory.entities.AdministrativeDivision;
-import pt.sanguept.territory.entities.Country;
 
 import java.util.Optional;
 
@@ -21,7 +20,7 @@ public class DivisionFeatureMapper {
 
     private final GeoJsonReader geoJsonReader = new GeoJsonReader();
 
-    public Optional<AdministrativeDivision> mapFeature(JsonNode feature, Integer providedCountryId) throws Exception {
+    public Optional<AdministrativeDivision> mapFeature(JsonNode feature) throws Exception {
         if (feature == null) return Optional.empty();
 
         JsonNode props = feature.get("properties");
@@ -55,7 +54,6 @@ public class DivisionFeatureMapper {
                 .id(osmId)
                 .name(name)
                 .geometry(geometry)
-                .country(providedCountryId == null ? null : Country.builder().id(providedCountryId).build())
                 .build();
 
         return Optional.of(div);

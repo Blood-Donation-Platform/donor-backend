@@ -25,7 +25,4 @@ public class AdministrativeDivision extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private AdministrativeDivision parent;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Country country;
-
 }

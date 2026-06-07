@@ -7,11 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pt.sanguept.territory.entities.AdministrativeDivision;
-import pt.sanguept.territory.entities.Country;
-import pt.sanguept.territory.exceptions.UnsupportedCountryException;
 import pt.sanguept.territory.mappers.DivisionFeatureMapper;
 import pt.sanguept.territory.repositories.AdministrativeDivisionRepository;
-import pt.sanguept.territory.repositories.CountryRepository;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,7 +19,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -33,10 +29,9 @@ public class DivisionImportService {
     private final AdministrativeDivisionRepository administrativeDivisionRepository;
     private final ObjectMapper objectMapper;
     private final AdministrativeDivisionParentMatchingService administrativeDivisionParentMatchingService;
-    private final CountryRepository countryRepository;
     private final DivisionFeatureMapper featureMapper;
 
-    public int importFromPbf(InputStream pbfStream, String countryCode) throws Exception {
+    public int importFromPbf(InputStream pbfStream) throws Exception {
 
         Path pbfFile = Files.createTempFile("portugal-admin-", ".osm.pbf");
         try {
@@ -61,12 +56,6 @@ public class DivisionImportService {
             List<AdministrativeDivision> batch = new ArrayList<>(1000);
             int count = 0;
 
-            Country providedCountry = resolveCountry(countryCode);
-            if (providedCountry == null) {
-                throw new UnsupportedCountryException("Provided countryCode is missing or unknown: " + countryCode);
-            }
-            Integer providedCountryId = providedCountry.getId();
-
             while ((line = reader.readLine()) != null) {
                 if (line.isBlank()) {
                     continue;
@@ -82,7 +71,7 @@ public class DivisionImportService {
                     throw new IOException("Failed to parse GeoJSON output from osmium. The line was: '" + line + "'. Make sure 'osmium-tool' is installed and in the system's PATH.", e);
                 }
 
-                Optional<AdministrativeDivision> mapped = featureMapper.mapFeature(feature, providedCountryId);
+                Optional<AdministrativeDivision> mapped = featureMapper.mapFeature(feature);
                 if (mapped.isEmpty()) continue;
 
                 AdministrativeDivision div = mapped.get();
@@ -92,7 +81,6 @@ public class DivisionImportService {
                     AdministrativeDivision existing = existingOpt.get();
                     existing.setName(div.getName());
                     existing.setGeometry(div.getGeometry());
-                    existing.setCountry(div.getCountry());
                     batch.add(existing);
                 } else {
                     batch.add(div);
@@ -120,12 +108,5 @@ public class DivisionImportService {
         } finally {
             Files.deleteIfExists(pbfFile);
         }
-    }
-
-    private Country resolveCountry(String code) {
-        if (code == null) return null;
-        String normalized = code.trim().toUpperCase(Locale.ROOT);
-        if (normalized.isEmpty()) return null;
-        return countryRepository.findByCode(normalized).orElse(null);
     }
 }

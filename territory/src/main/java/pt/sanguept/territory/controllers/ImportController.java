@@ -28,8 +28,7 @@ public class ImportController {
 
     @PostMapping(value = "/divisions/import/pbf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MessageResponseDto> importDivisionsFromPbf(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "countryCode", required = false) String countryCode
+            @RequestParam("file") MultipartFile file
     ) throws Exception {
         log.info("Starting division import from PBF file. File name: {}, Size: {} bytes", file.getOriginalFilename(), file.getSize());
 
@@ -42,7 +41,7 @@ public class ImportController {
             int count;
             try (InputStream is = file.getInputStream()) {
                 log.debug("Opening input stream for file: {}", file.getOriginalFilename());
-                count = divisionImportService.importFromPbf(is, countryCode);
+                count = divisionImportService.importFromPbf(is);
                 log.info("Successfully imported {} divisions from PBF file", count);
             }
 
