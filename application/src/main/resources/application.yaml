@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: sanguept-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sanguept}
+    username: ${DB_USERNAME:sanguept}
+    password: ${DB_PASSWORD:sanguept}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  config:
+    import: optional:file:.env[.properties]

@@ -1,4 +1,4 @@
-package pt.sanguept.sanguept_api;
+package pt.sanguept.application;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
