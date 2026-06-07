@@ -37,6 +37,7 @@
 	<properties>
 		<java.version>25</java.version>
 		<spring-modulith.version>2.0.6</spring-modulith.version>
+		<sanguept.version>0.0.1-SNAPSHOT</sanguept.version>
 	</properties>
 	<dependencies>
 		<dependency>

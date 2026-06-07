@@ -15,5 +15,9 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
+  security:
+    user:
+      name: admin
+      password: changeme
   config:
     import: optional:file:.env[.properties]
