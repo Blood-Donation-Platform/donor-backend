@@ -27,6 +27,8 @@
 	    <module>common-core</module>
 	    <module>common-infra</module>
 	    <module>common-web</module>
+	    <module>identity</module>
+	    <module>user</module>
 	</modules>
     <scm>
 		<connection/>
