@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.sanguept.user.dtos.CreateUserRequest;
+import pt.sanguept.user.entities.Role;
 import pt.sanguept.user.entities.User;
 import pt.sanguept.user.repositories.UserRepository;
 
@@ -42,16 +43,30 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public User enableUser(Long id) {
-        User user = userRepository.findById(id)
+    @Transactional(readOnly = true)
+    public User findById(Long id) {
+        return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+    }
+
+    public void assignRole(User user, Role role) {
+        user.getRoles().add(role);
+        userRepository.save(user);
+    }
+
+    public void removeRole(User user, Role role) {
+        user.getRoles().remove(role);
+        userRepository.save(user);
+    }
+
+    public User enableUser(Long id) {
+        User user = findById(id);
         user.setEnabled(true);
         return userRepository.save(user);
     }
 
     public User disableUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+        User user = findById(id);
         user.setEnabled(false);
         return userRepository.save(user);
     }
