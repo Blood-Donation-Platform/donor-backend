@@ -17,3 +17,14 @@ spring:
           time_zone: UTC
   config:
     import: optional:file:.env[.properties]
+
+jwt:
+  secret: ${JWT_SECRET:change-me-to-a-long-random-string-at-least-32-chars}
+  access-token-expiry-minutes: ${JWT_ACCESS_EXPIRY_MINUTES:15}
+  refresh-token-expiry-days: ${JWT_REFRESH_EXPIRY_DAYS:7}
+
+app:
+  bootstrap:
+    enabled: ${BOOTSTRAP_ENABLED:true}
+    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:admin@sanguept.pt}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:admin}

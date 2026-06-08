@@ -2,6 +2,7 @@ package pt.sanguept.user.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,15 @@ import pt.sanguept.user.repositories.UserRepository;
 public class DataInitializer implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
+
+    @Value("${app.bootstrap.enabled:true}")
+    private boolean bootstrapEnabled;
+
+    @Value("${app.bootstrap.admin-email:admin@sanguept.pt}")
+    private String adminEmail;
+
+    @Value("${app.bootstrap.admin-password:admin}")
+    private String adminPassword;
 
     private final RoleRepository roleRepository;
     private final RoleService roleService;
@@ -42,19 +52,23 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedAdminUser() {
+        if (!bootstrapEnabled) {
+            log.info("Bootstrap disabled, skipping admin user creation");
+            return;
+        }
         if (userRepository.count() == 0) {
             CreateUserRequest request = CreateUserRequest.builder()
-                    .email("admin@sanguept.pt")
-                    .rawPassword("admin")
+                    .email(adminEmail)
+                    .rawPassword(adminPassword)
                     .firstName("Admin")
                     .lastName("User")
                     .build();
             userService.createUser(request);
             roleService.assignRoleToUser(
-                    userService.findByEmail("admin@sanguept.pt").orElseThrow().getId(),
+                    userService.findByEmail(adminEmail).orElseThrow().getId(),
                     "ROLE_ADMIN"
             );
-            log.info("Seeded admin user: admin@sanguept.pt / admin");
+            log.info("Seeded admin user: {}", adminEmail);
         }
     }
 

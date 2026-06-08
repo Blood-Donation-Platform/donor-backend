@@ -1,5 +1,6 @@
 package pt.sanguept.identity.services;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -15,9 +16,12 @@ import java.util.List;
 public class JwtService {
 
     private final JwtEncoder jwtEncoder;
+    private final long accessTokenExpiryMinutes;
 
-    public JwtService(JwtEncoder jwtEncoder) {
+    public JwtService(JwtEncoder jwtEncoder,
+                      @Value("${jwt.access-token-expiry-minutes:15}") long accessTokenExpiryMinutes) {
         this.jwtEncoder = jwtEncoder;
+        this.accessTokenExpiryMinutes = accessTokenExpiryMinutes;
     }
 
     public String generateToken(AppPrincipal principal) {
@@ -29,12 +33,17 @@ public class JwtService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(1, ChronoUnit.HOURS))
+                .expiresAt(now.plus(accessTokenExpiryMinutes, ChronoUnit.MINUTES))
                 .subject(principal.getId().toString())
                 .claim("roles", roles)
+                .claim("authVersion", principal.getAuthVersion())
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    public long getAccessTokenExpirySeconds() {
+        return accessTokenExpiryMinutes * 60;
     }
 
 }

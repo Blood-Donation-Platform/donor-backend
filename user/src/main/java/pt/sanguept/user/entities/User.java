@@ -43,6 +43,9 @@ public class User extends BaseEntity {
     @Builder.Default
     private boolean enabled = true;
 
+    @Builder.Default
+    private int authVersion = 1;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",

@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface UserAccountProvider {
     Optional<AppPrincipal> findByEmail(String email);
+
+    Optional<AppPrincipal> findById(Long id);
 }

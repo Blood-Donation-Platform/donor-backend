@@ -25,6 +25,12 @@ public class UserAccountProviderImpl implements UserAccountProvider {
                 .map(this::toAppPrincipal);
     }
 
+    @Override
+    public Optional<AppPrincipal> findById(Long id) {
+        return userRepository.findById(id)
+                .map(this::toAppPrincipal);
+    }
+
     private AppPrincipal toAppPrincipal(User user) {
         List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
@@ -37,6 +43,7 @@ public class UserAccountProviderImpl implements UserAccountProvider {
                 .authorities(authorities)
                 .enabled(user.isEnabled())
                 .accountNonLocked(true)
+                .authVersion(user.getAuthVersion())
                 .build();
     }
 }
