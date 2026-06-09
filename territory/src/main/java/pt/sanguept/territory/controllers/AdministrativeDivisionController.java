@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pt.sanguept.territory.dtos.AdministrativeDivisionDto;
 import pt.sanguept.territory.dtos.DivisionFilter;
+import pt.sanguept.territory.dtos.DivisionSelectorDto;
 import pt.sanguept.territory.mappers.AdministrativeDivisionMapper;
 import pt.sanguept.territory.repositories.AdministrativeDivisionRepository;
 import pt.sanguept.territory.services.DivisionService;
@@ -37,6 +38,14 @@ public class AdministrativeDivisionController {
             @RequestParam(required = false) Boolean rootOnly) {
         DivisionFilter filter = new DivisionFilter(name, parentId, rootOnly);
         return ResponseEntity.ok(service.search(filter, pageable));
+    }
+
+    @GetMapping("/selector")
+    public ResponseEntity<List<DivisionSelectorDto>> searchSelector(
+            @RequestParam String query,
+            @PageableDefault(size = 20) Pageable pageable) {
+        int size = Math.clamp(pageable.getPageSize(), 1, 50);
+        return ResponseEntity.ok(service.searchSelector(query, size));
     }
 
     @GetMapping("/{id}")

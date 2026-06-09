@@ -2,12 +2,15 @@ package pt.sanguept.territory.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.sanguept.commoninfra.jpa.SpecBuilder;
 import pt.sanguept.territory.dtos.AdministrativeDivisionDto;
+import pt.sanguept.territory.dtos.AncestorDto;
 import pt.sanguept.territory.dtos.DivisionFilter;
+import pt.sanguept.territory.dtos.DivisionSelectorDto;
 import pt.sanguept.territory.entities.AdministrativeDivision;
 import pt.sanguept.territory.mappers.AdministrativeDivisionMapper;
 import pt.sanguept.territory.repositories.AdministrativeDivisionRepository;
@@ -48,6 +51,20 @@ public Page<AdministrativeDivisionDto> findAll(Pageable pageable) {
 		return repository.findById(childId)
 				.map(this::collectAncestors)
 				.orElseGet(Collections::emptyList);
+	}
+
+	public List<DivisionSelectorDto> searchSelector(String query, int size) {
+		var spec = new SpecBuilder<AdministrativeDivision>()
+				.like("name", query)
+				.build();
+		return repository.findAll(spec, PageRequest.of(0, size)).stream()
+				.map(d -> new DivisionSelectorDto(
+						d.getId(),
+						d.getName(),
+						collectAncestors(d).stream()
+								.map(a -> new AncestorDto(a.getId(), a.getName()))
+								.toList()))
+				.toList();
 	}
 
 	private List<AdministrativeDivision> collectAncestors(AdministrativeDivision division) {
