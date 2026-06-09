@@ -18,6 +18,7 @@ public class AppPrincipal implements UserDetails, AuthenticatedPrincipal {
     private final Collection<? extends GrantedAuthority> authorities;
     private final boolean enabled;
     private final boolean accountNonLocked;
+    private final int authVersion;
 
     @Override
     public Long getId() {
@@ -50,5 +51,9 @@ public class AppPrincipal implements UserDetails, AuthenticatedPrincipal {
 
     @Override public boolean isAccountNonLocked() {
         return accountNonLocked;
+    }
+
+    public int getAuthVersion() {
+        return authVersion;
     }
 }
