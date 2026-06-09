@@ -55,7 +55,47 @@ public class DivisionService {
 	}
 
 	public List<DivisionSelectorDto> searchSelector(String query, int size) {
-		return repository.findAll(nameLike(query), PageRequest.of(0, size)).stream()
+		if (query == null || query.isBlank()) {
+			return List.of();
+		}
+
+		List<AdministrativeDivision> prefixResults = repository
+				.findAll(nameStartsWith(query), PageRequest.of(0, size))
+				.stream().toList();
+
+		if (prefixResults.size() >= size) {
+			return toSelectorDtoList(prefixResults);
+		}
+
+		int remaining = size - prefixResults.size();
+		List<Long> foundIds = prefixResults.stream()
+				.map(AdministrativeDivision::getId).toList();
+		List<AdministrativeDivision> fallbackResults = repository
+				.findAll(nameContains(query).and(idNotIn(foundIds)), PageRequest.of(0, remaining))
+				.stream().toList();
+
+		List<AdministrativeDivision> all = new ArrayList<>(prefixResults);
+		all.addAll(fallbackResults);
+		return toSelectorDtoList(all);
+	}
+
+	static Specification<AdministrativeDivision> nameStartsWith(String query) {
+		return (root, cq, cb) ->
+				cb.like(cb.lower(root.get("name")), query.toLowerCase() + "%");
+	}
+
+	static Specification<AdministrativeDivision> nameContains(String query) {
+		return (root, cq, cb) ->
+				cb.like(cb.lower(root.get("name")), "%" + query.toLowerCase() + "%");
+	}
+
+	static Specification<AdministrativeDivision> idNotIn(List<Long> ids) {
+		return (root, cq, cb) ->
+				ids.isEmpty() ? cb.conjunction() : cb.not(root.get("id").in(ids));
+	}
+
+	private List<DivisionSelectorDto> toSelectorDtoList(List<AdministrativeDivision> divisions) {
+		return divisions.stream()
 				.map(d -> {
 					var ancestors = collectAncestors(d).stream()
 							.map(a -> new AncestorDto(a.getId(), a.getName()))
@@ -63,15 +103,6 @@ public class DivisionService {
 					return new DivisionSelectorDto(d.getId(), d.getName(), ancestors, ancestors.size());
 				})
 				.toList();
-	}
-
-	public static Specification<AdministrativeDivision> nameLike(String query) {
-		return (root, cq, cb) -> {
-			if (query == null || query.isBlank()) {
-				return cb.conjunction();
-			}
-			return cb.like(cb.lower(root.get("name")), "%" + query.toLowerCase() + "%");
-		};
 	}
 
 	private List<AdministrativeDivision> collectAncestors(AdministrativeDivision division) {
