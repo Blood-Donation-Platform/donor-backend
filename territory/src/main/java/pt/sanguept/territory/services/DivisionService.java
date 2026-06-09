@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.sanguept.commoninfra.jpa.SpecBuilder;
@@ -31,7 +32,7 @@ public class DivisionService {
 	
   	private final AdministrativeDivisionRepository repository;
 
-public Page<AdministrativeDivisionDto> findAll(Pageable pageable) {
+	public Page<AdministrativeDivisionDto> findAll(Pageable pageable) {
         return repository.findAll(pageable).map(AdministrativeDivisionMapper::toDto);
     }
 
@@ -54,17 +55,23 @@ public Page<AdministrativeDivisionDto> findAll(Pageable pageable) {
 	}
 
 	public List<DivisionSelectorDto> searchSelector(String query, int size) {
-		var spec = new SpecBuilder<AdministrativeDivision>()
-				.like("name", query)
-				.build();
-		return repository.findAll(spec, PageRequest.of(0, size)).stream()
-				.map(d -> new DivisionSelectorDto(
-						d.getId(),
-						d.getName(),
-						collectAncestors(d).stream()
-								.map(a -> new AncestorDto(a.getId(), a.getName()))
-								.toList()))
+		return repository.findAll(nameLike(query), PageRequest.of(0, size)).stream()
+				.map(d -> {
+					var ancestors = collectAncestors(d).stream()
+							.map(a -> new AncestorDto(a.getId(), a.getName()))
+							.toList();
+					return new DivisionSelectorDto(d.getId(), d.getName(), ancestors, ancestors.size());
+				})
 				.toList();
+	}
+
+	public static Specification<AdministrativeDivision> nameLike(String query) {
+		return (root, cq, cb) -> {
+			if (query == null || query.isBlank()) {
+				return cb.conjunction();
+			}
+			return cb.like(cb.lower(root.get("name")), "%" + query.toLowerCase() + "%");
+		};
 	}
 
 	private List<AdministrativeDivision> collectAncestors(AdministrativeDivision division) {
