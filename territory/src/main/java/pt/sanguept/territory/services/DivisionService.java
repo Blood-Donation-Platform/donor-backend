@@ -40,14 +40,6 @@ public Page<AdministrativeDivisionDto> findAll(Pageable pageable) {
         return repository.findAll(sb.build(), pageable).map(AdministrativeDivisionMapper::toDto);
     }
 
-	public Optional<AdministrativeDivision> findById(Long id) {
-		return repository.findById(id);
-	}
-
-	public List<AdministrativeDivision> findChildren(Long parentId) {
-		return repository.findByParentId(parentId);
-	}
-
 	public Optional<AdministrativeDivision> findParent(Long childId) {
 		return repository.findById(childId).map(AdministrativeDivision::getParent);
 	}
@@ -68,18 +60,6 @@ public Page<AdministrativeDivisionDto> findAll(Pageable pageable) {
 		Collections.reverse(ancestors);
 		return ancestors;
 	}
-
-	public List<AdministrativeDivision> findRoots() {
-		return repository.findAllByParentIsNull();
-	}
-
-    public List<AdministrativeDivision> findByCoordinates(double latitude, double longitude) {
-        return repository.findByCoordinates(latitude, longitude);
-    }
-
-    public Optional<AdministrativeDivision> findLowestContainingDivision(double latitude, double longitude) {
-        return repository.findLowestContainingDivision(latitude, longitude);
-    }
 }
 
 
