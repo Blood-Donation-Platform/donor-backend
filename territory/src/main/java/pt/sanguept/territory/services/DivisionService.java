@@ -7,7 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pt.sanguept.commoninfra.jpa.SpecBuilder;
 import pt.sanguept.territory.dtos.AdministrativeDivisionDto;
 import pt.sanguept.territory.dtos.AncestorDto;
 import pt.sanguept.territory.dtos.DivisionFilter;
@@ -32,16 +31,11 @@ public class DivisionService {
 	
   	private final AdministrativeDivisionRepository repository;
 
-	public Page<AdministrativeDivisionDto> findAll(Pageable pageable) {
-        return repository.findAll(pageable).map(AdministrativeDivisionMapper::toDto);
-    }
-
     public Page<AdministrativeDivisionDto> search(DivisionFilter filter, Pageable pageable) {
-        var sb = new SpecBuilder<AdministrativeDivision>()
-                .like("name", filter.name())
-                .eq("parent.id", filter.parentId())
-                .isNull("parent", filter.rootOnly());
-        return repository.findAll(sb.build(), pageable).map(AdministrativeDivisionMapper::toDto);
+        var spec = nameContains(filter.name())
+                .and(parentIdEq(filter.parentId()))
+                .and(parentIsNull(filter.rootOnly()));
+        return repository.findAll(spec, pageable).map(AdministrativeDivisionMapper::toDto);
     }
 
 	public Optional<AdministrativeDivision> findParent(Long childId) {
@@ -85,13 +79,27 @@ public class DivisionService {
 	}
 
 	static Specification<AdministrativeDivision> nameContains(String query) {
-		return (root, cq, cb) ->
-				cb.like(cb.lower(root.get("name")), "%" + query.toLowerCase() + "%");
+		return (root, cq, cb) -> {
+			if (query == null || query.isBlank()) {
+				return cb.conjunction();
+			}
+			return cb.like(cb.lower(root.get("name")), "%" + query.toLowerCase() + "%");
+		};
 	}
 
 	static Specification<AdministrativeDivision> idNotIn(List<Long> ids) {
 		return (root, cq, cb) ->
 				ids.isEmpty() ? cb.conjunction() : cb.not(root.get("id").in(ids));
+	}
+
+	static Specification<AdministrativeDivision> parentIdEq(Long parentId) {
+		return (root, cq, cb) ->
+				parentId == null ? cb.conjunction() : cb.equal(root.get("parent").get("id"), parentId);
+	}
+
+	static Specification<AdministrativeDivision> parentIsNull(Boolean value) {
+		return (root, cq, cb) ->
+				value == null || !value ? cb.conjunction() : cb.isNull(root.get("parent"));
 	}
 
 	private List<DivisionSelectorDto> toSelectorDtoList(List<AdministrativeDivision> divisions) {
