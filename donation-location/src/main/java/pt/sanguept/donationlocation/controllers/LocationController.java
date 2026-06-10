@@ -1,4 +1,4 @@
-package pt.sanguept.location.controllers;
+package pt.sanguept.donationlocation.controllers;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -7,11 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pt.sanguept.location.dtos.LocationDto;
-import pt.sanguept.location.dtos.LocationFilter;
-import pt.sanguept.location.dtos.LocationRequestDto;
-import pt.sanguept.location.mappers.LocationMapper;
-import pt.sanguept.location.services.LocationService;
+import pt.sanguept.donationlocation.dtos.LocationDto;
+import pt.sanguept.donationlocation.dtos.LocationFilter;
+import pt.sanguept.donationlocation.dtos.LocationRequestDto;
+import pt.sanguept.donationlocation.mappers.LocationMapper;
+import pt.sanguept.donationlocation.services.LocationService;
 
 import java.util.UUID;
 

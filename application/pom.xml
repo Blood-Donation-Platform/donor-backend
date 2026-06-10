@@ -50,7 +50,7 @@
         </dependency>
         <dependency>
             <groupId>pt.sanguept</groupId>
-            <artifactId>location</artifactId>
+            <artifactId>donation-location</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
         <dependency>

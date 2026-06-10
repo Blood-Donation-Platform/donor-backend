@@ -1,7 +1,7 @@
-package pt.sanguept.location.mappers;
+package pt.sanguept.donationlocation.mappers;
 
-import pt.sanguept.location.dtos.LocationDto;
-import pt.sanguept.location.entities.Location;
+import pt.sanguept.donationlocation.dtos.LocationDto;
+import pt.sanguept.donationlocation.entities.Location;
 
 import java.util.List;
 

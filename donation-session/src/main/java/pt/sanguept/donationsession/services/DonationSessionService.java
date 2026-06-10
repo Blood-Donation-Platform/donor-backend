@@ -15,7 +15,7 @@ import pt.sanguept.donationsession.events.SessionCancelledEvent;
 import pt.sanguept.donationsession.events.SessionCompletedEvent;
 import pt.sanguept.donationsession.events.SessionPublishedEvent;
 import pt.sanguept.donationsession.repositories.DonationSessionRepository;
-import pt.sanguept.location.repositories.LocationRepository;
+import pt.sanguept.donationlocation.repositories.LocationRepository;
 
 import java.time.Clock;
 import java.time.LocalDate;

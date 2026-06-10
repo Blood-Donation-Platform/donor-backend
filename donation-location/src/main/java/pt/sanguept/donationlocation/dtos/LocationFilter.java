@@ -1,4 +1,4 @@
-package pt.sanguept.location.dtos;
+package pt.sanguept.donationlocation.dtos;
 
 public record LocationFilter(
         String name,

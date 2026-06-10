@@ -1,4 +1,4 @@
-package pt.sanguept.location.entities;
+package pt.sanguept.donationlocation.entities;
 
 import jakarta.persistence.*;
 import lombok.*;

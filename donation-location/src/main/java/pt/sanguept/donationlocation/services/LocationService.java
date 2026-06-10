@@ -1,4 +1,4 @@
-package pt.sanguept.location.services;
+package pt.sanguept.donationlocation.services;
 
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -10,10 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pt.sanguept.location.dtos.LocationFilter;
-import pt.sanguept.location.dtos.LocationRequestDto;
-import pt.sanguept.location.entities.Location;
-import pt.sanguept.location.repositories.LocationRepository;
+import pt.sanguept.donationlocation.dtos.LocationFilter;
+import pt.sanguept.donationlocation.dtos.LocationRequestDto;
+import pt.sanguept.donationlocation.entities.Location;
+import pt.sanguept.donationlocation.repositories.LocationRepository;
 import pt.sanguept.territory.entities.AdministrativeDivision;
 import pt.sanguept.territory.repositories.AdministrativeDivisionRepository;
 

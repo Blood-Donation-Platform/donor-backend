@@ -29,7 +29,7 @@
 	    <module>common-web</module>
 	    <module>identity</module>
 	    <module>user</module>
-	    <module>location</module>
+	    <module>donation-location</module>
         <module>donation-session</module>
     </modules>
     <scm>

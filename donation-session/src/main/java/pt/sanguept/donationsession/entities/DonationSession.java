@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import pt.sanguept.commoninfra.entities.AuditedEntity;
 import pt.sanguept.donationsession.enums.SessionStatus;
-import pt.sanguept.location.entities.Location;
+import pt.sanguept.donationlocation.entities.Location;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
