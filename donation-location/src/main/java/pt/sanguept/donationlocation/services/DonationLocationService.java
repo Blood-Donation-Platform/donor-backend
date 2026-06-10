@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.sanguept.donationlocation.dtos.DonationLocationFilter;
 import pt.sanguept.donationlocation.dtos.DonationLocationRequestDto;
-import pt.sanguept.donationlocation.entities.Location;
-import pt.sanguept.donationlocation.repositories.LocationRepository;
+import pt.sanguept.donationlocation.entities.DonationLocation;
+import pt.sanguept.donationlocation.repositories.DonationLocationRepository;
 import pt.sanguept.territory.entities.AdministrativeDivision;
 import pt.sanguept.territory.repositories.AdministrativeDivisionRepository;
 
@@ -22,27 +22,27 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class LocationService {
+public class DonationLocationService {
 
     private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory(new PrecisionModel(), 4326);
 
-    private final LocationRepository locationRepository;
+    private final DonationLocationRepository donationLocationRepository;
     private final AdministrativeDivisionRepository administrativeDivisionRepository;
 
-    public Page<Location> search(DonationLocationFilter filter, Pageable pageable) {
+    public Page<DonationLocation> search(DonationLocationFilter filter, Pageable pageable) {
         var spec = nameContains(filter.name())
                 .and(administrativeDivisionIdEq(filter.administrativeDivisionId()))
                 .and(activeEq(filter.active()));
-        return locationRepository.findAll(spec, pageable);
+        return donationLocationRepository.findAll(spec, pageable);
     }
 
-    public Location findById(UUID id) {
-        return locationRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Location not found: " + id));
+    public DonationLocation findById(UUID id) {
+        return donationLocationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("DonationLocation not found: " + id));
     }
 
     @Transactional
-    public Location create(DonationLocationRequestDto dto) {
+    public DonationLocation create(DonationLocationRequestDto dto) {
         if (dto.name() == null || dto.name().isBlank()) {
             throw new IllegalArgumentException("Name is required");
         }
@@ -64,7 +64,7 @@ public class LocationService {
 
         Point point = GEOMETRY_FACTORY.createPoint(new Coordinate(dto.longitude(), dto.latitude()));
 
-        Location location = new Location();
+        DonationLocation location = new DonationLocation();
         location.setName(dto.name());
         location.setAddress(dto.address());
         location.setCoordinates(point);
@@ -72,12 +72,12 @@ public class LocationService {
         location.setActive(dto.active() != null ? dto.active() : true);
         location.setExternalId(dto.externalId());
 
-        return locationRepository.save(location);
+        return donationLocationRepository.save(location);
     }
 
     @Transactional
-    public Location update(UUID id, DonationLocationRequestDto dto) {
-        Location location = findById(id);
+    public DonationLocation update(UUID id, DonationLocationRequestDto dto) {
+        DonationLocation location = findById(id);
 
         if (dto.name() != null && !dto.name().isBlank()) {
             location.setName(dto.name());
@@ -101,17 +101,17 @@ public class LocationService {
             location.setExternalId(dto.externalId());
         }
 
-        return locationRepository.save(location);
+        return donationLocationRepository.save(location);
     }
 
     @Transactional
     public void deactivate(UUID id) {
-        Location location = findById(id);
+        DonationLocation location = findById(id);
         location.setActive(false);
-        locationRepository.save(location);
+        donationLocationRepository.save(location);
     }
 
-    static Specification<Location> nameContains(String query) {
+    static Specification<DonationLocation> nameContains(String query) {
         return (root, cq, cb) -> {
             if (query == null || query.isBlank()) {
                 return cb.conjunction();
@@ -120,12 +120,12 @@ public class LocationService {
         };
     }
 
-    static Specification<Location> administrativeDivisionIdEq(Long divisionId) {
+    static Specification<DonationLocation> administrativeDivisionIdEq(Long divisionId) {
         return (root, cq, cb) ->
                 divisionId == null ? cb.conjunction() : cb.equal(root.get("administrativeDivision").get("id"), divisionId);
     }
 
-    static Specification<Location> activeEq(Boolean active) {
+    static Specification<DonationLocation> activeEq(Boolean active) {
         return (root, cq, cb) ->
                 active == null ? cb.conjunction() : cb.equal(root.get("active"), active);
     }

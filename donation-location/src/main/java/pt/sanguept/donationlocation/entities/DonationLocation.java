@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-public class Location extends BaseEntity {
+public class DonationLocation extends BaseEntity {
 
     @Id
     @GeneratedValue

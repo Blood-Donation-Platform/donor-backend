@@ -15,7 +15,7 @@ import pt.sanguept.donationsession.events.SessionCancelledEvent;
 import pt.sanguept.donationsession.events.SessionCompletedEvent;
 import pt.sanguept.donationsession.events.SessionPublishedEvent;
 import pt.sanguept.donationsession.repositories.DonationSessionRepository;
-import pt.sanguept.donationlocation.repositories.LocationRepository;
+import pt.sanguept.donationlocation.repositories.DonationLocationRepository;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -29,16 +29,16 @@ import java.util.UUID;
 public class DonationSessionService {
 
     private final DonationSessionRepository repository;
-    private final LocationRepository locationRepository;
+    private final DonationLocationRepository donationLocationRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     @Transactional
     public DonationSession createSession(DonationSessionRequestDto dto) {
-        var location = locationRepository.findById(dto.locationId())
-                .orElseThrow(() -> new IllegalArgumentException("Location not found: " + dto.locationId()));
+        var location = donationLocationRepository.findById(dto.locationId())
+                .orElseThrow(() -> new IllegalArgumentException("DonationLocation not found: " + dto.locationId()));
         if (!location.getActive()) {
-            throw new IllegalArgumentException("Location is not active: " + dto.locationId());
+            throw new IllegalArgumentException("DonationLocation is not active: " + dto.locationId());
         }
         if (!dto.startAt().isBefore(dto.endAt())) {
             throw new IllegalArgumentException("startAt must be before endAt");
@@ -70,10 +70,10 @@ public class DonationSessionService {
             session.setDescription(dto.description());
         }
         if (dto.locationId() != null) {
-            var location = locationRepository.findById(dto.locationId())
-                    .orElseThrow(() -> new IllegalArgumentException("Location not found: " + dto.locationId()));
+            var location = donationLocationRepository.findById(dto.locationId())
+                    .orElseThrow(() -> new IllegalArgumentException("DonationLocation not found: " + dto.locationId()));
             if (!location.getActive()) {
-                throw new IllegalArgumentException("Location is not active: " + dto.locationId());
+                throw new IllegalArgumentException("DonationLocation is not active: " + dto.locationId());
             }
             session.setLocation(location);
         }
@@ -118,7 +118,7 @@ public class DonationSessionService {
             throw new IllegalArgumentException("startAt must be before endAt");
         }
         if (!session.getLocation().getActive()) {
-            throw new IllegalArgumentException("Location is not active");
+            throw new IllegalArgumentException("DonationLocation is not active");
         }
 
         session.setSessionStatus(SessionStatus.PUBLISHED);

@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import pt.sanguept.donationlocation.dtos.DonationLocationDto;
 import pt.sanguept.donationlocation.dtos.DonationLocationFilter;
 import pt.sanguept.donationlocation.dtos.DonationLocationRequestDto;
-import pt.sanguept.donationlocation.mappers.LocationMapper;
-import pt.sanguept.donationlocation.services.LocationService;
+import pt.sanguept.donationlocation.mappers.DonationLocationMapper;
+import pt.sanguept.donationlocation.services.DonationLocationService;
 
 import java.util.UUID;
 
@@ -21,7 +21,7 @@ import java.util.UUID;
 @Tag(name = "Locations", description = "Endpoints for managing donation locations.")
 public class DonationLocationController {
 
-    private final LocationService locationService;
+    private final DonationLocationService donationLocationService;
 
     @GetMapping
     public ResponseEntity<Page<DonationLocationDto>> search(
@@ -30,27 +30,27 @@ public class DonationLocationController {
             @RequestParam(required = false) Long administrativeDivisionId,
             @RequestParam(required = false) Boolean active) {
         DonationLocationFilter filter = new DonationLocationFilter(name, administrativeDivisionId, active);
-        return ResponseEntity.ok(locationService.search(filter, pageable).map(LocationMapper::toDto));
+        return ResponseEntity.ok(donationLocationService.search(filter, pageable).map(DonationLocationMapper::toDto));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<DonationLocationDto> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(LocationMapper.toDto(locationService.findById(id)));
+        return ResponseEntity.ok(DonationLocationMapper.toDto(donationLocationService.findById(id)));
     }
 
     @PostMapping
     public ResponseEntity<DonationLocationDto> create(@RequestBody DonationLocationRequestDto dto) {
-        return ResponseEntity.ok(LocationMapper.toDto(locationService.create(dto)));
+        return ResponseEntity.ok(DonationLocationMapper.toDto(donationLocationService.create(dto)));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<DonationLocationDto> update(@PathVariable UUID id, @RequestBody DonationLocationRequestDto dto) {
-        return ResponseEntity.ok(LocationMapper.toDto(locationService.update(id, dto)));
+        return ResponseEntity.ok(DonationLocationMapper.toDto(donationLocationService.update(id, dto)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<DonationLocationDto> deactivate(@PathVariable UUID id) {
-        locationService.deactivate(id);
-        return ResponseEntity.ok(LocationMapper.toDto(locationService.findById(id)));
+        donationLocationService.deactivate(id);
+        return ResponseEntity.ok(DonationLocationMapper.toDto(donationLocationService.findById(id)));
     }
 }

@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import pt.sanguept.donationlocation.entities.DonationLocation;
 import pt.sanguept.donationsession.dtos.DonationSessionRequestDto;
 import pt.sanguept.donationsession.entities.DonationSession;
 import pt.sanguept.donationsession.enums.SessionStatus;
@@ -15,8 +16,7 @@ import pt.sanguept.donationsession.events.SessionCancelledEvent;
 import pt.sanguept.donationsession.events.SessionCompletedEvent;
 import pt.sanguept.donationsession.events.SessionPublishedEvent;
 import pt.sanguept.donationsession.repositories.DonationSessionRepository;
-import pt.sanguept.donationlocation.entities.Location;
-import pt.sanguept.donationlocation.repositories.LocationRepository;
+import pt.sanguept.donationlocation.repositories.DonationLocationRepository;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -39,7 +39,7 @@ class DonationSessionServiceTest {
     private DonationSessionRepository repository;
 
     @Mock
-    private LocationRepository locationRepository;
+    private DonationLocationRepository donationLocationRepository;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -53,8 +53,8 @@ class DonationSessionServiceTest {
     private static final Instant FIXED_NOW = Instant.parse("2026-06-15T12:00:00Z");
     private static final UUID SESSION_ID = UUID.randomUUID();
     private static final UUID LOCATION_ID = UUID.randomUUID();
-    private static final Location ACTIVE_LOCATION = buildLocation(true);
-    private static final Location INACTIVE_LOCATION = buildLocation(false);
+    private static final DonationLocation ACTIVE_LOCATION = buildLocation(true);
+    private static final DonationLocation INACTIVE_LOCATION = buildLocation(false);
 
     @BeforeEach
     void setUpClock() {
@@ -67,7 +67,7 @@ class DonationSessionServiceTest {
     @Test
     void shouldCreateDraftSession() {
         var dto = validRequest();
-        when(locationRepository.findById(LOCATION_ID)).thenReturn(Optional.of(ACTIVE_LOCATION));
+        when(donationLocationRepository.findById(LOCATION_ID)).thenReturn(Optional.of(ACTIVE_LOCATION));
         when(repository.save(any())).thenAnswer(inv -> {
             DonationSession s = inv.getArgument(0);
             s.setId(SESSION_ID);
@@ -127,7 +127,7 @@ class DonationSessionServiceTest {
 
         assertThatThrownBy(() -> service.publishSession(SESSION_ID))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Location is not active");
+                .hasMessageContaining("DonationLocation is not active");
     }
 
     @Test
@@ -188,7 +188,7 @@ class DonationSessionServiceTest {
 
     @Test
     void shouldThrowWhenStartAfterEnd() {
-        when(locationRepository.findById(LOCATION_ID)).thenReturn(Optional.of(ACTIVE_LOCATION));
+        when(donationLocationRepository.findById(LOCATION_ID)).thenReturn(Optional.of(ACTIVE_LOCATION));
 
         var dto = DonationSessionRequestDto.builder()
                 .title("Bad Session")
@@ -204,7 +204,7 @@ class DonationSessionServiceTest {
 
     @Test
     void shouldThrowWhenStartEqualsEnd() {
-        when(locationRepository.findById(LOCATION_ID)).thenReturn(Optional.of(ACTIVE_LOCATION));
+        when(donationLocationRepository.findById(LOCATION_ID)).thenReturn(Optional.of(ACTIVE_LOCATION));
 
         var sameTime = LocalDateTime.of(2026, 6, 10, 12, 0);
         var dto = DonationSessionRequestDto.builder()
@@ -285,8 +285,8 @@ class DonationSessionServiceTest {
 
     // ── Helpers ───────────────────────────────────────────────
 
-    private static Location buildLocation(boolean active) {
-        Location location = new Location();
+    private static DonationLocation buildLocation(boolean active) {
+        DonationLocation location = new DonationLocation();
         location.setId(LOCATION_ID);
         location.setName("Centro de Saude");
         location.setAddress("Rua Principal");

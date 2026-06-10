@@ -1,15 +1,15 @@
 package pt.sanguept.donationlocation.mappers;
 
 import pt.sanguept.donationlocation.dtos.DonationLocationDto;
-import pt.sanguept.donationlocation.entities.Location;
+import pt.sanguept.donationlocation.entities.DonationLocation;
 
 import java.util.List;
 
-public class LocationMapper {
+public class DonationLocationMapper {
 
-    private LocationMapper() {}
+    private DonationLocationMapper() {}
 
-    public static DonationLocationDto toDto(Location entity) {
+    public static DonationLocationDto toDto(DonationLocation entity) {
         if (entity == null) return null;
         return new DonationLocationDto(
                 entity.getId(),
@@ -24,8 +24,8 @@ public class LocationMapper {
         );
     }
 
-    public static List<DonationLocationDto> toDtoList(List<Location> entities) {
+    public static List<DonationLocationDto> toDtoList(List<DonationLocation> entities) {
         if (entities == null) return List.of();
-        return entities.stream().map(LocationMapper::toDto).toList();
+        return entities.stream().map(DonationLocationMapper::toDto).toList();
     }
 }

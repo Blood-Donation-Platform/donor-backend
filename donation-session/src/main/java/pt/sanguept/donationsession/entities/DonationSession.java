@@ -3,8 +3,8 @@ package pt.sanguept.donationsession.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import pt.sanguept.commoninfra.entities.AuditedEntity;
+import pt.sanguept.donationlocation.entities.DonationLocation;
 import pt.sanguept.donationsession.enums.SessionStatus;
-import pt.sanguept.donationlocation.entities.Location;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -27,7 +27,7 @@ public class DonationSession extends AuditedEntity {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Location location;
+    private DonationLocation location;
 
     @Column(nullable = false)
     private LocalDateTime startAt;
