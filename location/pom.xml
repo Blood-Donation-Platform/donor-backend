@@ -9,7 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>application</artifactId>
+    <artifactId>location</artifactId>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
@@ -18,6 +18,10 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-spatial</artifactId>
+        </dependency>
         <dependency>
             <groupId>pt.sanguept</groupId>
             <artifactId>common-core</artifactId>
@@ -36,21 +40,6 @@
         <dependency>
             <groupId>pt.sanguept</groupId>
             <artifactId>territory</artifactId>
-            <version>${sanguept.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>pt.sanguept</groupId>
-            <artifactId>user</artifactId>
-            <version>${sanguept.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>pt.sanguept</groupId>
-            <artifactId>identity</artifactId>
-            <version>${sanguept.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>pt.sanguept</groupId>
-            <artifactId>location</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
     </dependencies>

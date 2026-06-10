@@ -29,6 +29,7 @@
 	    <module>common-web</module>
 	    <module>identity</module>
 	    <module>user</module>
+	    <module>location</module>
 	</modules>
     <scm>
 		<connection/>
