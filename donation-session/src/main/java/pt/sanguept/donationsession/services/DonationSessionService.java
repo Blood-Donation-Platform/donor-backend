@@ -17,6 +17,7 @@ import pt.sanguept.donationsession.events.SessionPublishedEvent;
 import pt.sanguept.donationsession.repositories.DonationSessionRepository;
 import pt.sanguept.location.repositories.LocationRepository;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -30,6 +31,7 @@ public class DonationSessionService {
     private final DonationSessionRepository repository;
     private final LocationRepository locationRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final Clock clock;
 
     @Transactional
     public DonationSession createSession(DonationSessionRequestDto dto) {
@@ -109,7 +111,7 @@ public class DonationSessionService {
         if (session.getSessionStatus() != SessionStatus.DRAFT) {
             throw new IllegalArgumentException("Only DRAFT sessions can be published");
         }
-        if (!session.getStartAt().isAfter(LocalDateTime.now())) {
+        if (!session.getStartAt().isAfter(LocalDateTime.now(clock))) {
             throw new IllegalArgumentException("Published sessions must start in the future");
         }
         if (!session.getStartAt().isBefore(session.getEndAt())) {
@@ -148,7 +150,7 @@ public class DonationSessionService {
 
     @Transactional
     public void completeExpiredSessions() {
-        var now = LocalDateTime.now();
+        var now = LocalDateTime.now(clock);
         var spec = sessionStatusEq(SessionStatus.PUBLISHED)
                 .and(endAtBefore(now));
 
