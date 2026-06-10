@@ -30,7 +30,8 @@
 	    <module>identity</module>
 	    <module>user</module>
 	    <module>location</module>
-	</modules>
+        <module>donation-session</module>
+    </modules>
     <scm>
 		<connection/>
 		<developerConnection/>
