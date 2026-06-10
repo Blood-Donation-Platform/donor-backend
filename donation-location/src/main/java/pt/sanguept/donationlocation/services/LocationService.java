@@ -10,8 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pt.sanguept.donationlocation.dtos.LocationFilter;
-import pt.sanguept.donationlocation.dtos.LocationRequestDto;
+import pt.sanguept.donationlocation.dtos.DonationLocationFilter;
+import pt.sanguept.donationlocation.dtos.DonationLocationRequestDto;
 import pt.sanguept.donationlocation.entities.Location;
 import pt.sanguept.donationlocation.repositories.LocationRepository;
 import pt.sanguept.territory.entities.AdministrativeDivision;
@@ -29,7 +29,7 @@ public class LocationService {
     private final LocationRepository locationRepository;
     private final AdministrativeDivisionRepository administrativeDivisionRepository;
 
-    public Page<Location> search(LocationFilter filter, Pageable pageable) {
+    public Page<Location> search(DonationLocationFilter filter, Pageable pageable) {
         var spec = nameContains(filter.name())
                 .and(administrativeDivisionIdEq(filter.administrativeDivisionId()))
                 .and(activeEq(filter.active()));
@@ -42,7 +42,7 @@ public class LocationService {
     }
 
     @Transactional
-    public Location create(LocationRequestDto dto) {
+    public Location create(DonationLocationRequestDto dto) {
         if (dto.name() == null || dto.name().isBlank()) {
             throw new IllegalArgumentException("Name is required");
         }
@@ -76,7 +76,7 @@ public class LocationService {
     }
 
     @Transactional
-    public Location update(UUID id, LocationRequestDto dto) {
+    public Location update(UUID id, DonationLocationRequestDto dto) {
         Location location = findById(id);
 
         if (dto.name() != null && !dto.name().isBlank()) {

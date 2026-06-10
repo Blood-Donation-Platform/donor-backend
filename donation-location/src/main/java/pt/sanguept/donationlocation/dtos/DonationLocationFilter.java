@@ -1,6 +1,6 @@
 package pt.sanguept.donationlocation.dtos;
 
-public record LocationFilter(
+public record DonationLocationFilter(
         String name,
         Long administrativeDivisionId,
         Boolean active
