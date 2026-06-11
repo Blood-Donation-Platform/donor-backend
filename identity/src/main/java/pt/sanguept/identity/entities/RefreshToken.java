@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
@@ -22,13 +23,13 @@ public class RefreshToken {
 
     @Id
     @GeneratedValue
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String tokenHash;
 
     @Column(nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(nullable = false)
     private Instant expiresAt;
@@ -39,7 +40,7 @@ public class RefreshToken {
     @Builder.Default
     private boolean revoked = false;
 
-    private Long replacedByTokenId;
+    private UUID replacedByTokenId;
 
     private String deviceId;
 

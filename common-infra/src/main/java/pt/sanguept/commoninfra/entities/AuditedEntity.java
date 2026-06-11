@@ -1,6 +1,8 @@
 package pt.sanguept.commoninfra.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.MappedSuperclass;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,9 +13,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import pt.sanguept.commoninfra.models.AuditActor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
@@ -28,21 +30,13 @@ public abstract class AuditedEntity {
     protected Instant createdAt;
 
     @CreatedBy
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "id", column = @Column(name = "created_by_id", updatable = false)),
-            @AttributeOverride(name = "identifier", column = @Column(name = "created_by_identifier", updatable = false))
-    })
-    protected AuditActor createdBy;
+    @Column(name = "created_by_id", updatable = false)
+    protected UUID createdBy;
 
     @LastModifiedDate
     protected Instant lastModifiedAt;
 
     @LastModifiedBy
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "id", column = @Column(name = "modified_by_id")),
-            @AttributeOverride(name = "identifier", column = @Column(name = "modified_by_identifier"))
-    })
-    protected AuditActor modifiedBy;
+    @Column(name = "modified_by_id")
+    protected UUID modifiedBy;
 }

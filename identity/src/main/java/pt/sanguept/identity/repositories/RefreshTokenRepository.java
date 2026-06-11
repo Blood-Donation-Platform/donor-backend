@@ -6,14 +6,15 @@ import pt.sanguept.identity.entities.RefreshToken;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
+public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
 
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
-    List<RefreshToken> findByUserId(Long userId);
+    List<RefreshToken> findByUserId(UUID userId);
 
-    void deleteByUserId(Long userId);
+    void deleteByUserId(UUID userId);
 
 }

@@ -29,7 +29,9 @@
 	    <module>common-web</module>
 	    <module>identity</module>
 	    <module>user</module>
-	</modules>
+	    <module>donation-location</module>
+        <module>donation-session</module>
+    </modules>
     <scm>
 		<connection/>
 		<developerConnection/>
@@ -55,6 +57,13 @@
 			<artifactId>spring-modulith-starter-jpa</artifactId>
 		</dependency>
 
+		<!-- Source: https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>12.8.1</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

@@ -48,6 +48,16 @@
             <artifactId>identity</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>donation-location</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>donation-session</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

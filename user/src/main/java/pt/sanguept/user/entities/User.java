@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,8 +18,10 @@ import pt.sanguept.commoninfra.entities.BaseEntity;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
+@Table(name = "_users")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -28,7 +31,7 @@ public class User extends BaseEntity {
 
     @Id
     @GeneratedValue
-    private Long id;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String email;

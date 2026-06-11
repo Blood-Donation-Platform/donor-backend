@@ -15,6 +15,7 @@ import pt.sanguept.territory.repositories.AdministrativeDivisionRepository;
 import pt.sanguept.territory.services.DivisionService;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/public/divisions")
@@ -34,7 +35,7 @@ public class AdministrativeDivisionController {
     public ResponseEntity<Page<AdministrativeDivisionDto>> findAll(
             @PageableDefault(size = 20) Pageable pageable,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long parentId,
+            @RequestParam(required = false) UUID parentId,
             @RequestParam(required = false) Boolean rootOnly) {
         DivisionFilter filter = new DivisionFilter(name, parentId, rootOnly);
         return ResponseEntity.ok(service.search(filter, pageable));
@@ -49,7 +50,7 @@ public class AdministrativeDivisionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdministrativeDivisionDto> getById(@PathVariable Long id) {
+    public ResponseEntity<AdministrativeDivisionDto> getById(@PathVariable UUID id) {
         return repository.findById(id)
                 .map(AdministrativeDivisionMapper::toDto)
                 .map(ResponseEntity::ok)
@@ -57,12 +58,12 @@ public class AdministrativeDivisionController {
     }
 
     @GetMapping("/{id}/children")
-    public ResponseEntity<List<AdministrativeDivisionDto>> getChildren(@PathVariable Long id) {
+    public ResponseEntity<List<AdministrativeDivisionDto>> getChildren(@PathVariable UUID id) {
         return ResponseEntity.ok(AdministrativeDivisionMapper.toDtoList(repository.findByParentId(id)));
     }
 
     @GetMapping("/{id}/parent")
-    public ResponseEntity<AdministrativeDivisionDto> getParent(@PathVariable Long id) {
+    public ResponseEntity<AdministrativeDivisionDto> getParent(@PathVariable UUID id) {
         return service.findParent(id)
                 .map(AdministrativeDivisionMapper::toDto)
                 .map(ResponseEntity::ok)
@@ -70,7 +71,7 @@ public class AdministrativeDivisionController {
     }
 
     @GetMapping("/{id}/ancestors")
-    public ResponseEntity<List<AdministrativeDivisionDto>> getAncestors(@PathVariable Long id) {
+    public ResponseEntity<List<AdministrativeDivisionDto>> getAncestors(@PathVariable UUID id) {
         return ResponseEntity.ok(AdministrativeDivisionMapper.toDtoList(service.findAncestors(id)));
     }
 

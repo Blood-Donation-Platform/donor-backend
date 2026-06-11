@@ -2,9 +2,11 @@ package pt.sanguept.territory.dtos;
 
 import lombok.Builder;
 
+import java.util.UUID;
+
 @Builder
 public record AdministrativeDivisionRequestDto(
         String name,
-        Long parentId,
+        UUID parentId,
         Boolean active
 ) { }

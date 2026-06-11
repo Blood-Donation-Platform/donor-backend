@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Read-only query service for AdministrativeDivision related lookups.
@@ -38,11 +39,11 @@ public class DivisionService {
         return repository.findAll(spec, pageable).map(AdministrativeDivisionMapper::toDto);
     }
 
-	public Optional<AdministrativeDivision> findParent(Long childId) {
+	public Optional<AdministrativeDivision> findParent(UUID childId) {
 		return repository.findById(childId).map(AdministrativeDivision::getParent);
 	}
 
-	public List<AdministrativeDivision> findAncestors(Long childId) {
+	public List<AdministrativeDivision> findAncestors(UUID childId) {
 		return repository.findById(childId)
 				.map(this::collectAncestors)
 				.orElseGet(Collections::emptyList);
@@ -62,7 +63,7 @@ public class DivisionService {
 		}
 
 		int remaining = size - prefixResults.size();
-		List<Long> foundIds = prefixResults.stream()
+		List<UUID> foundIds = prefixResults.stream()
 				.map(AdministrativeDivision::getId).toList();
 		List<AdministrativeDivision> fallbackResults = repository
 				.findAll(nameContains(query).and(idNotIn(foundIds)), PageRequest.of(0, remaining))
@@ -87,12 +88,12 @@ public class DivisionService {
 		};
 	}
 
-	static Specification<AdministrativeDivision> idNotIn(List<Long> ids) {
+	static Specification<AdministrativeDivision> idNotIn(List<UUID> ids) {
 		return (root, cq, cb) ->
 				ids.isEmpty() ? cb.conjunction() : cb.not(root.get("id").in(ids));
 	}
 
-	static Specification<AdministrativeDivision> parentIdEq(Long parentId) {
+	static Specification<AdministrativeDivision> parentIdEq(UUID parentId) {
 		return (root, cq, cb) ->
 				parentId == null ? cb.conjunction() : cb.equal(root.get("parent").get("id"), parentId);
 	}

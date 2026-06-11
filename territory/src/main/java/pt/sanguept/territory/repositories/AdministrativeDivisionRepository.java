@@ -9,10 +9,11 @@ import pt.sanguept.territory.entities.AdministrativeDivision;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface AdministrativeDivisionRepository extends BaseRepository<AdministrativeDivision, Long>, JpaSpecificationExecutor<AdministrativeDivision> {
-    List<AdministrativeDivision> findByParentId(Long parentId);
+public interface AdministrativeDivisionRepository extends BaseRepository<AdministrativeDivision, UUID>, JpaSpecificationExecutor<AdministrativeDivision> {
+    List<AdministrativeDivision> findByParentId(UUID parentId);
 
     List<AdministrativeDivision> findAllByParentIsNull();
 
@@ -20,7 +21,7 @@ public interface AdministrativeDivisionRepository extends BaseRepository<Adminis
             "JOIN administrative_division c ON ST_Contains(p.geometry, c.geometry) " +
             "WHERE c.id = :childId AND p.id != :childId " +
             "ORDER BY ST_Area(p.geometry) ASC LIMIT 1", nativeQuery = true)
-    Optional<AdministrativeDivision> findParentByGeometry(@Param("childId") Long childId);
+    Optional<AdministrativeDivision> findParentByGeometry(@Param("childId") UUID childId);
 
     /**
      * Returns all divisions whose geometry contains the given point, ordered by area ascending.

@@ -5,6 +5,8 @@ import lombok.*;
 import org.locationtech.jts.geom.Geometry;
 import pt.sanguept.commoninfra.entities.BaseEntity;
 
+import java.util.UUID;
+
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,7 +17,7 @@ public class AdministrativeDivision extends BaseEntity {
 
     @Id
     @GeneratedValue
-    private Long id;
+    private UUID id;
 
     private String name;
 

@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -30,7 +31,7 @@ public class RefreshTokenService {
         this.refreshTokenExpiryDays = refreshTokenExpiryDays;
     }
 
-    public String createToken(Long userId, String deviceId) {
+    public String createToken(UUID userId, String deviceId) {
         byte[] randomBytes = new byte[32];
         SECURE_RANDOM.nextBytes(randomBytes);
         String rawToken = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
@@ -61,7 +62,7 @@ public class RefreshTokenService {
             throw new IllegalArgumentException("Refresh token has expired");
         }
 
-        Long userId = oldToken.getUserId();
+        UUID userId = oldToken.getUserId();
 
         oldToken.setRevoked(true);
         oldToken.setUsedAt(Instant.now());
@@ -95,7 +96,7 @@ public class RefreshTokenService {
         refreshTokenRepository.save(token);
     }
 
-    public void revokeAllForUser(Long userId) {
+    public void revokeAllForUser(UUID userId) {
         refreshTokenRepository.deleteByUserId(userId);
     }
 
@@ -109,6 +110,6 @@ public class RefreshTokenService {
         }
     }
 
-    public record TokenRotationResult(String newRawToken, Long userId) {}
+    public record TokenRotationResult(String newRawToken, UUID userId) {}
 
 }

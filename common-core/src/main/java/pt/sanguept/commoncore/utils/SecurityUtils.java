@@ -7,6 +7,7 @@ import pt.sanguept.commoncore.interfaces.AuthenticatedPrincipal;
 import pt.sanguept.commoncore.models.AppPrincipal;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public final class SecurityUtils {
 
@@ -17,7 +18,7 @@ public final class SecurityUtils {
      *
      * @return An Optional containing the user ID if authenticated, or empty if not.
      */
-    public static Optional<Long> getCurrentUserId() {
+    public static Optional<UUID> getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() ||
