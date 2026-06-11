@@ -51,7 +51,6 @@ public class DivisionFeatureMapper {
         }
 
         AdministrativeDivision div = AdministrativeDivision.builder()
-                .id(osmId)
                 .name(name)
                 .geometry(geometry)
                 .build();

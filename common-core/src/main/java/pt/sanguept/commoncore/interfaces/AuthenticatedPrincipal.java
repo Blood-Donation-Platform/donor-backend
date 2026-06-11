@@ -1,5 +1,7 @@
 package pt.sanguept.commoncore.interfaces;
 
+import java.util.UUID;
+
 public interface AuthenticatedPrincipal {
-    Long getId();
+    UUID getId();
 }

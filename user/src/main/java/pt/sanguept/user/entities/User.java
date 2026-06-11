@@ -18,6 +18,7 @@ import pt.sanguept.commoninfra.entities.BaseEntity;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "_users")
@@ -30,7 +31,7 @@ public class User extends BaseEntity {
 
     @Id
     @GeneratedValue
-    private Long id;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String email;

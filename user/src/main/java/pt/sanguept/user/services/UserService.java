@@ -9,6 +9,7 @@ import pt.sanguept.user.entities.User;
 import pt.sanguept.user.repositories.UserRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -44,7 +45,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User findById(Long id) {
+    public User findById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
     }
@@ -59,13 +60,13 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public User enableUser(Long id) {
+    public User enableUser(UUID id) {
         User user = findById(id);
         user.setEnabled(true);
         return userRepository.save(user);
     }
 
-    public User disableUser(Long id) {
+    public User disableUser(UUID id) {
         User user = findById(id);
         user.setEnabled(false);
         return userRepository.save(user);

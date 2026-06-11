@@ -7,11 +7,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import pt.sanguept.commoncore.interfaces.AuthenticatedPrincipal;
 
 import java.util.Collection;
+import java.util.UUID;
 
 @Builder
 public class AppPrincipal implements UserDetails, AuthenticatedPrincipal {
 
-    private final Long id;
+    private final UUID id;
     @Getter
     private final String identifier; // username OR service name
     private final String password;
@@ -21,7 +22,7 @@ public class AppPrincipal implements UserDetails, AuthenticatedPrincipal {
     private final int authVersion;
 
     @Override
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

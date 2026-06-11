@@ -8,6 +8,7 @@ import pt.sanguept.user.repositories.RoleRepository;
 import pt.sanguept.user.repositories.UserRepository;
 
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -34,7 +35,7 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
-    public void assignRoleToUser(Long userId, String roleName) {
+    public void assignRoleToUser(UUID userId, String roleName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         Role role = roleRepository.findByName(roleName)
@@ -43,7 +44,7 @@ public class RoleService {
         userRepository.save(user);
     }
 
-    public void removeRoleFromUser(Long userId, String roleName) {
+    public void removeRoleFromUser(UUID userId, String roleName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         Role role = roleRepository.findByName(roleName)
@@ -53,7 +54,7 @@ public class RoleService {
     }
 
     @Transactional(readOnly = true)
-    public Set<Role> getRolesForUser(Long userId) {
+    public Set<Role> getRolesForUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         return user.getRoles();

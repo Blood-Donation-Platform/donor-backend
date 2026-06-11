@@ -1,7 +1,9 @@
 package pt.sanguept.donationlocation.dtos;
 
+import java.util.UUID;
+
 public record DonationLocationFilter(
         String name,
-        Long administrativeDivisionId,
+        UUID administrativeDivisionId,
         Boolean active
 ) {}

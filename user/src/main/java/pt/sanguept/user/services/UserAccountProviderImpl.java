@@ -9,6 +9,7 @@ import pt.sanguept.user.repositories.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class UserAccountProviderImpl implements UserAccountProvider {
@@ -26,7 +27,7 @@ public class UserAccountProviderImpl implements UserAccountProvider {
     }
 
     @Override
-    public Optional<AppPrincipal> findById(Long id) {
+    public Optional<AppPrincipal> findById(UUID id) {
         return userRepository.findById(id)
                 .map(this::toAppPrincipal);
     }

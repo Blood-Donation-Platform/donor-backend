@@ -1,3 +1,5 @@
 package pt.sanguept.territory.dtos;
 
-public record AncestorDto(Long id, String name) {}
+import java.util.UUID;
+
+public record AncestorDto(UUID id, String name) {}

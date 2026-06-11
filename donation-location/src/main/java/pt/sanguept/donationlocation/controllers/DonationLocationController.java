@@ -27,7 +27,7 @@ public class DonationLocationController {
     public ResponseEntity<Page<DonationLocationDto>> search(
             @PageableDefault(size = 20) Pageable pageable,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long administrativeDivisionId,
+            @RequestParam(required = false) UUID administrativeDivisionId,
             @RequestParam(required = false) Boolean active) {
         DonationLocationFilter filter = new DonationLocationFilter(name, administrativeDivisionId, active);
         return ResponseEntity.ok(donationLocationService.search(filter, pageable).map(DonationLocationMapper::toDto));

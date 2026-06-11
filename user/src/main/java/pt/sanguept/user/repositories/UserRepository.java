@@ -5,9 +5,10 @@ import pt.sanguept.commoninfra.repositories.BaseRepository;
 import pt.sanguept.user.entities.User;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends BaseRepository<User, Long> {
+public interface UserRepository extends BaseRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
 

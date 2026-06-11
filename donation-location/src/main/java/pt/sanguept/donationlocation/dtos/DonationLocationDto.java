@@ -11,7 +11,7 @@ public record DonationLocationDto(
         String address,
         Double latitude,
         Double longitude,
-        Long administrativeDivisionId,
+        UUID administrativeDivisionId,
         String administrativeDivisionName,
         Boolean active,
         String externalId

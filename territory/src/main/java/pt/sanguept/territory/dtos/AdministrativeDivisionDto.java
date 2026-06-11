@@ -2,10 +2,12 @@ package pt.sanguept.territory.dtos;
 
 import lombok.Builder;
 
+import java.util.UUID;
+
 @Builder
 public record AdministrativeDivisionDto(
-    Long id,
+    UUID id,
     String name,
-    Long parentId,
+    UUID parentId,
     Integer monumentsCount
 ) {}

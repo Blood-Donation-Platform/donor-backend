@@ -120,7 +120,7 @@ public class DonationLocationService {
         };
     }
 
-    static Specification<DonationLocation> administrativeDivisionIdEq(Long divisionId) {
+    static Specification<DonationLocation> administrativeDivisionIdEq(UUID divisionId) {
         return (root, cq, cb) ->
                 divisionId == null ? cb.conjunction() : cb.equal(root.get("administrativeDivision").get("id"), divisionId);
     }
