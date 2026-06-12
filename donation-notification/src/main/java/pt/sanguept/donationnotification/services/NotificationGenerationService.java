@@ -13,6 +13,9 @@ import pt.sanguept.donationsession.events.SessionPublishedEvent;
 import pt.sanguept.donationsession.repositories.DonationSessionRepository;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,9 +49,14 @@ public class NotificationGenerationService {
     }
 
     private static String computeIdempotencyKey(UUID sessionId, UUID userId) {
-        return UUID.nameUUIDFromBytes(
-                (sessionId.toString() + ":" + userId.toString()).getBytes(StandardCharsets.UTF_8)
-        ).toString();
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(
+                    (sessionId.toString() + ":" + userId.toString()).getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
     }
 
 }

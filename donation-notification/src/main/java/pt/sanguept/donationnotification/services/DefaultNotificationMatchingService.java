@@ -15,8 +15,11 @@ import pt.sanguept.territory.services.DivisionService;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -70,11 +73,18 @@ public class DefaultNotificationMatchingService implements NotificationMatchingS
     }
 
     private Set<UUID> filterByPreferences(Set<UUID> candidateUserIds) {
-        Instant now = Instant.now();
-        Set<UUID> result = new HashSet<>();
+        if (candidateUserIds.isEmpty()) {
+            return Set.of();
+        }
 
+        Instant now = Instant.now();
+        Map<UUID, NotificationPreference> prefMap = preferenceRepository.findByUserIdIn(candidateUserIds)
+                .stream()
+                .collect(Collectors.toMap(NotificationPreference::getUserId, Function.identity()));
+
+        Set<UUID> result = new HashSet<>();
         for (UUID userId : candidateUserIds) {
-            NotificationPreference pref = preferenceRepository.findByUserId(userId).orElse(null);
+            NotificationPreference pref = prefMap.get(userId);
             if (pref == null || pref.isEnabled()) {
                 if (pref == null || pref.getMuteUntil() == null || pref.getMuteUntil().isBefore(now)) {
                     result.add(userId);

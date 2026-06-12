@@ -1,5 +1,6 @@
 package pt.sanguept.donationnotification.services;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.locationtech.jts.geom.Coordinate;
@@ -25,6 +26,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,6 +56,11 @@ class DefaultNotificationMatchingServiceTest {
     private static final UUID DIV_AVEIRO_PARENT = UUID.randomUUID();
     private static final UUID DIV_PORTUGAL = UUID.randomUUID();
     private static final UUID DIV_PORTO = UUID.randomUUID();
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(preferenceRepository.findByUserIdIn(any())).thenReturn(List.of());
+    }
 
     @Test
     void shouldMatchUserWithAdminSubscriptionForSameDivision() {
@@ -139,7 +147,7 @@ class DefaultNotificationMatchingServiceTest {
         var sub = radiusSubscription(USER_MUTED, 40.65, -8.66, 20);
         when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
                 .thenReturn(List.of(sub));
-        when(preferenceRepository.findByUserId(USER_MUTED)).thenReturn(Optional.of(
+        when(preferenceRepository.findByUserIdIn(Set.of(USER_MUTED))).thenReturn(List.of(
                 mutedPreference(USER_MUTED, Instant.now().plusSeconds(3600))));
 
         Set<UUID> result = matchingService.findInterestedUsers(session);
@@ -153,7 +161,7 @@ class DefaultNotificationMatchingServiceTest {
         var sub = radiusSubscription(USER_DISABLED, 40.65, -8.66, 20);
         when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
                 .thenReturn(List.of(sub));
-        when(preferenceRepository.findByUserId(USER_DISABLED)).thenReturn(Optional.of(
+        when(preferenceRepository.findByUserIdIn(Set.of(USER_DISABLED))).thenReturn(List.of(
                 disabledPreference(USER_DISABLED)));
 
         Set<UUID> result = matchingService.findInterestedUsers(session);
@@ -167,12 +175,94 @@ class DefaultNotificationMatchingServiceTest {
         var sub = radiusSubscription(USER_RADIUS, 40.65, -8.66, 20);
         when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
                 .thenReturn(List.of(sub));
-        when(preferenceRepository.findByUserId(USER_RADIUS)).thenReturn(Optional.of(
+        when(preferenceRepository.findByUserIdIn(Set.of(USER_RADIUS))).thenReturn(List.of(
                 mutedPreference(USER_RADIUS, Instant.now().minusSeconds(3600))));
 
         Set<UUID> result = matchingService.findInterestedUsers(session);
 
         assertThat(result).contains(USER_RADIUS);
+    }
+
+    @Test
+    void shouldDeduplicateUserMatchedByBothAdminAndRadius() {
+        var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
+        var aveiroDiv = adminDivision(DIV_AVEIRO);
+        var adminSub = adminSubscription(USER_AVEIRO, DIV_AVEIRO);
+        var radiusSub = radiusSubscription(USER_AVEIRO, 40.65, -8.66, 20);
+        setupAdminMatching(session, aveiroDiv, Set.of(DIV_AVEIRO), List.of(adminSub));
+        when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
+                .thenReturn(List.of(radiusSub));
+
+        Set<UUID> result = matchingService.findInterestedUsers(session);
+
+        assertThat(result).containsExactly(USER_AVEIRO);
+    }
+
+    @Test
+    void shouldDeduplicateUserWithMultipleRadiusSubscriptions() {
+        var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
+        var sub1 = radiusSubscription(USER_RADIUS, 40.65, -8.66, 20);
+        var sub2 = radiusSubscription(USER_RADIUS, 40.63, -8.64, 20);
+        when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
+                .thenReturn(List.of(sub1, sub2));
+
+        Set<UUID> result = matchingService.findInterestedUsers(session);
+
+        assertThat(result).containsExactly(USER_RADIUS);
+    }
+
+    @Test
+    void shouldIncludeUserWithNoPreferenceRecord() {
+        var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
+        var sub = radiusSubscription(USER_RADIUS, 40.65, -8.66, 20);
+        when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
+                .thenReturn(List.of(sub));
+
+        Set<UUID> result = matchingService.findInterestedUsers(session);
+
+        assertThat(result).contains(USER_RADIUS);
+    }
+
+    @Test
+    void shouldMatchDifferentUsersViaAdminAndRadiusConcurrently() {
+        var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
+        var aveiroDiv = adminDivision(DIV_AVEIRO);
+        var adminSub = adminSubscription(USER_AVEIRO, DIV_AVEIRO);
+        var radiusSub = radiusSubscription(USER_RADIUS, 40.65, -8.66, 20);
+        setupAdminMatching(session, aveiroDiv, Set.of(DIV_AVEIRO), List.of(adminSub));
+        when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
+                .thenReturn(List.of(radiusSub));
+
+        Set<UUID> result = matchingService.findInterestedUsers(session);
+
+        assertThat(result).containsExactlyInAnyOrder(USER_AVEIRO, USER_RADIUS);
+    }
+
+    @Test
+    void shouldMatchUserAtExactBoundaryOfRadius() {
+        var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
+        double distance = DefaultNotificationMatchingService.haversineDistance(
+                40.64, -8.65, 40.65, -8.66);
+        var sub = radiusSubscription(USER_RADIUS, 40.65, -8.66, (int) Math.ceil(distance));
+        when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
+                .thenReturn(List.of(sub));
+
+        Set<UUID> result = matchingService.findInterestedUsers(session);
+
+        assertThat(result).contains(USER_RADIUS);
+    }
+
+    @Test
+    void shouldHandleEmptyCandidateSet() {
+        var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
+        var aveiroDiv = adminDivision(DIV_AVEIRO);
+        setupAdminMatching(session, aveiroDiv, Set.of(DIV_AVEIRO), List.of());
+        when(subscriptionRepository.findByTypeAndEnabled(SubscriptionType.RADIUS, true))
+                .thenReturn(List.of());
+
+        Set<UUID> result = matchingService.findInterestedUsers(session);
+
+        assertThat(result).isEmpty();
     }
 
     private void setupAdminMatching(DonationSession session, AdministrativeDivision division,
