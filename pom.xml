@@ -32,6 +32,7 @@
 	    <module>donation-location</module>
         <module>donation-session</module>
 	    <module>donation-notification</module>
+	    <module>donation-notification-delivery</module>
 	</modules>
     <scm>
 		<connection/>
