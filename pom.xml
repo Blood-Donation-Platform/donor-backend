@@ -31,7 +31,8 @@
 	    <module>user</module>
 	    <module>donation-location</module>
         <module>donation-session</module>
-    </modules>
+	    <module>donation-notification</module>
+	</modules>
     <scm>
 		<connection/>
 		<developerConnection/>
