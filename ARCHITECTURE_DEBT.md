@@ -452,7 +452,7 @@ interface NotificationSender {
 - No delivery strategy in matching layer
 - No fan-out in generation layer
 
-**Trigger for migration:** The existing `send(UUID requestId, UUID userId, UUID sessionId)` signature is acceptable now but should be replaced with `send(NotificationRequest)` before adding the first external channel. The sender should receive the full entity, not extracted fields.
+**Trigger for migration:** ~~The existing `send(UUID requestId, UUID userId, UUID sessionId)` signature is acceptable now but should be replaced with `send(NotificationRequest)` before adding the first external channel.~~ **IMPLEMENTED (2026-06-12).** The sender now receives the full entity via `send(NotificationRequest request)`, owning channel resolution, fan-out, and idempotency enforcement internally.
 
 ---
 
@@ -538,36 +538,41 @@ Replay always routes to backfill queue.
 
 | | Current | Required |
 |---|---|---|
-| **Mechanism** | `existsByUserIdAndSessionId()` + `UNIQUE(user_id, session_id)` | Explicit `idempotency_key` |
-| **Scope** | Application-level DB check | First-class domain field + DB index |
-| **Survives MQ?** | No — MQ redelivery bypasses application check | Yes — key is embedded in the message |
+| **Status** | **IMPLEMENTED** | — |
+| **Mechanism** | `idempotency_key` column + `uk_notification_idempotency` unique index | — |
+| **Key computation** | `UUID.nameUUIDFromBytes(sessionId + ":" + userId)` in `NotificationGenerationService` | — |
+| **Dedup check** | `existsByIdempotencyKey()` in repository | — |
+| **Survives MQ?** | Yes — key is embedded in the message | — |
 
-**Problem with current approach:**
-- `existsByUserIdAndSessionId()` works for single-instance DB writes
-- Fails under MQ redelivery (same key, different code path)
-- Does not generalize to cross-system operations
-- Uniqueness constraint is a side effect, not an explicit contract
+**Resolved problem:**
+- ~~`existsByUserIdAndSessionId()` works for single-instance DB writes~~
+- ~~Fails under MQ redelivery (same key, different code path)~~
+- ~~Does not generalize to cross-system operations~~
+- ~~Uniqueness constraint is a side effect, not an explicit contract~~
 
-**Correct model:**
+**Correct model (implemented):**
 
 ```java
-// Computed at generation time
-String idempotencyKey = hash(sessionId + ":" + userId);
+// NotificationGenerationService.computeIdempotencyKey()
+private static String computeIdempotencyKey(UUID sessionId, UUID userId) {
+    return UUID.nameUUIDFromBytes(
+            (sessionId.toString() + ":" + userId.toString()).getBytes(StandardCharsets.UTF_8)
+    ).toString();
+}
 ```
 
-**Schema addition:**
+**Schema (Flyway V2 — implemented):**
 
 ```sql
-ALTER TABLE notification_request
-ADD COLUMN idempotency_key VARCHAR(255);
-
-CREATE UNIQUE INDEX uk_notification_idempotency
-ON notification_request(idempotency_key);
+ALTER TABLE notification_request ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(255);
+UPDATE notification_request SET idempotency_key = md5(user_id::text || ':' || session_id::text) WHERE idempotency_key IS NULL;
+ALTER TABLE notification_request ALTER COLUMN idempotency_key SET NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uk_notification_idempotency ON notification_request(idempotency_key);
 ```
 
 **Rule:** All notification execution must be idempotent at sender level using `idempotency_key`, not application-level existence checks. The key is the correctness boundary for retries, MQ redelivery, sender fan-out, and future distributed architectures.
 
-**Priority:** P0. Must be implemented before MQ migration or external channel integration. Implementable now with a migration and a hash function — low effort, high correctness impact.
+**Priority:** ~~P0~~ — IMPLEMENTED (2026-06-12).
 
 ---
 
@@ -668,10 +673,10 @@ Ranked by "when this breaks, it breaks hard":
 
 | Priority | Item | Trigger condition | Effort |
 |---|---|---|---|
-| P0 | Idempotency key (Section 15) | Before MQ migration or external channels | Low |
+| ~~P0~~ DONE | Idempotency key (Section 15) | Before MQ migration or external channels | Low |
 | P0 | Radius: PostGIS ST_DWithin (Section 2) | >10k radius subs OR >100 sessions/min | Medium |
 | P0 | Batch preference query (Section 4) | Sessions match >500 users | Low |
-| P1 | Sender contract: `send(NotificationRequest)` (Section 12) | Before first external channel | Low |
+| ~~P1~~ DONE | Sender contract: `send(NotificationRequest)` (Section 12) | Before first external channel | Low |
 | P1 | Module split: domain vs delivery (Section 8) | Before Telegram/email/SMS | Medium |
 | P1 | Territory interface decoupling (Section 6) | Before territory module refactoring | Low |
 | P1 | NotificationRequest bulk insert (Section 5) | Sessions match >1k users | Low |
@@ -700,12 +705,12 @@ The `donation-notification` module was deliberately built with:
 - **Tight coupling to territory internals** via `DivisionService`
 - **Log-based observability** instead of metrics infrastructure
 - **Implicit ordering** instead of explicit queue partitioning
-- **Application-level dedup** instead of an explicit idempotency key
-- **Sender as a sink** (`send(userId, sessionId)`) instead of sender as the fan-out owner
+- ~~Application-level dedup~~ — resolved: explicit `idempotency_key` + unique index (Section 15, 2026-06-12)
+- ~~Sender as a sink (`send(userId, sessionId)`)~~ — resolved: `send(NotificationRequest)` with full entity ownership (Section 12, 2026-06-12)
 
 Every one of these was a deliberate trade-off: **simple now, easy to replace later**. None are architectural mistakes. They are acceleration decisions.
 
-The system can scale to ~10,000 users and ~100 sessions/day with zero changes. Beyond that, the P0 items above (idempotency key, spatial matching, batch preferences) are the first three targets.
+The system can scale to ~10,000 users and ~100 sessions/day with zero changes. Beyond that, the remaining P0 items (spatial matching, batch preferences) are the first two targets. The idempotency key and sender contract prerequisites for MQ migration are already in place.
 
 The single most important architectural boundary to protect: **matching → generation → sender**. Matching never knows channels. Sender never knows subscriptions. This boundary is what prevents notification systems from becoming unmaintainable.
 
