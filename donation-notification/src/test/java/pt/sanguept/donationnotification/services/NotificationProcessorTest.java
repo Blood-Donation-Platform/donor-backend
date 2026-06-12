@@ -36,6 +36,8 @@ class NotificationProcessorTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(processor, "batchSize", 50);
+        lenient().when(requestRepository.findStuckProcessing(anyInt())).thenReturn(List.of());
+        lenient().when(requestRepository.countByStatus(any())).thenReturn(0L);
     }
 
     @Test
@@ -49,7 +51,7 @@ class NotificationProcessorTest {
         assertThat(request.getStatus()).isEqualTo(NotificationRequestStatus.PROCESSED);
         assertThat(request.getAttemptCount()).isEqualTo(1);
         assertThat(request.getProcessedAt()).isNotNull();
-        verify(sender).send(USER_ID, SESSION_ID);
+        verify(sender).send(request.getId(), USER_ID, SESSION_ID);
     }
 
     @Test
@@ -69,7 +71,8 @@ class NotificationProcessorTest {
         var request = pendingRequest();
         when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
-        doThrow(new RuntimeException("Connection refused")).when(sender).send(USER_ID, SESSION_ID);
+        doThrow(new RuntimeException("Connection refused"))
+                .when(sender).send(request.getId(), USER_ID, SESSION_ID);
 
         processor.processPendingRequests();
 
@@ -77,6 +80,7 @@ class NotificationProcessorTest {
         assertThat(request.getAttemptCount()).isEqualTo(1);
         assertThat(request.getFailureReason()).isEqualTo("Connection refused");
         assertThat(request.getLastAttemptAt()).isNotNull();
+        assertThat(request.getNextAttemptAt()).isNotNull();
     }
 
     @Test
@@ -85,13 +89,15 @@ class NotificationProcessorTest {
         request.setAttemptCount(2);
         when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
-        doThrow(new RuntimeException("Connection refused")).when(sender).send(USER_ID, SESSION_ID);
+        doThrow(new RuntimeException("Connection refused"))
+                .when(sender).send(request.getId(), USER_ID, SESSION_ID);
 
         processor.processPendingRequests();
 
         assertThat(request.getStatus()).isEqualTo(NotificationRequestStatus.FAILED);
         assertThat(request.getAttemptCount()).isEqualTo(3);
         assertThat(request.hasExceededMaxAttempts()).isTrue();
+        assertThat(request.getNextAttemptAt()).isNull();
     }
 
     @Test
@@ -101,8 +107,27 @@ class NotificationProcessorTest {
 
         processor.processPendingRequests();
 
-        verify(sender, never()).send(any(), any());
+        verify(sender, never()).send(any(), any(), any());
         verify(requestRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldRecoverStuckProcessingRequests() {
+        var stuckRequest = new NotificationRequest();
+        stuckRequest.setId(UUID.randomUUID());
+        stuckRequest.setUserId(USER_ID);
+        stuckRequest.setSessionId(SESSION_ID);
+        stuckRequest.setStatus(NotificationRequestStatus.PROCESSING);
+        stuckRequest.setLastAttemptAt(java.time.Instant.now().minusSeconds(600));
+
+        when(requestRepository.findStuckProcessing(anyInt())).thenReturn(List.of(stuckRequest));
+        when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
+                .thenReturn(List.of());
+
+        processor.processPendingRequests();
+
+        assertThat(stuckRequest.getStatus()).isEqualTo(NotificationRequestStatus.PENDING);
+        assertThat(stuckRequest.getNextAttemptAt()).isNull();
     }
 
     private NotificationRequest pendingRequest() {

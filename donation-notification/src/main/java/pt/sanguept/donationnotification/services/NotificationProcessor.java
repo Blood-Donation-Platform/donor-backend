@@ -17,6 +17,8 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class NotificationProcessor {
 
+    private static final int STUCK_TIMEOUT_MINUTES = 5;
+
     private final NotificationRequestRepository requestRepository;
     private final NotificationSender sender;
 
@@ -26,6 +28,8 @@ public class NotificationProcessor {
     @Scheduled(fixedDelayString = "${app.notification.processing.interval:30000}")
     @Transactional
     public void processPendingRequests() {
+        recoverStuckProcessing();
+
         var pending = requestRepository.findPendingForProcessing(
                 NotificationRequestStatus.PENDING.name(), batchSize);
 
@@ -43,10 +47,11 @@ public class NotificationProcessor {
             request.setStatus(NotificationRequestStatus.PROCESSING);
             request.setAttemptCount(request.getAttemptCount() + 1);
             request.setLastAttemptAt(Instant.now());
+            request.setNextAttemptAt(null);
             requestRepository.save(request);
 
             try {
-                sender.send(request.getUserId(), request.getSessionId());
+                sender.send(request.getId(), request.getUserId(), request.getSessionId());
 
                 request.setStatus(NotificationRequestStatus.PROCESSED);
                 request.setProcessedAt(Instant.now());
@@ -60,7 +65,24 @@ public class NotificationProcessor {
             }
         }
 
-        log.info("Batch complete: {} processed, {} succeeded, {} failed", pending.size(), succeeded, failed);
+        long queueDepth = requestRepository.countByStatus(NotificationRequestStatus.PENDING);
+        long processingCount = requestRepository.countByStatus(NotificationRequestStatus.PROCESSING);
+        long failedCount = requestRepository.countByStatus(NotificationRequestStatus.FAILED);
+
+        log.info("Batch complete: {} processed, {} succeeded, {} failed | queue=PENDING:{} PROCESSING:{} FAILED:{}",
+                pending.size(), succeeded, failed, queueDepth, processingCount, failedCount);
+    }
+
+    private void recoverStuckProcessing() {
+        var stuck = requestRepository.findStuckProcessing(STUCK_TIMEOUT_MINUTES);
+        if (!stuck.isEmpty()) {
+            log.warn("Recovering {} stuck PROCESSING requests", stuck.size());
+            for (NotificationRequest request : stuck) {
+                request.setStatus(NotificationRequestStatus.PENDING);
+                request.setNextAttemptAt(null);
+                requestRepository.save(request);
+            }
+        }
     }
 
     private void handleFailure(NotificationRequest request, Exception e) {
@@ -72,10 +94,15 @@ public class NotificationProcessor {
 
         if (request.hasExceededMaxAttempts()) {
             request.setStatus(NotificationRequestStatus.FAILED);
+            request.setNextAttemptAt(null);
             log.warn("Notification permanently failed for user {} session {} after {} attempts",
                     request.getUserId(), request.getSessionId(), request.getAttemptCount());
         } else {
             request.setStatus(NotificationRequestStatus.PENDING);
+            request.computeNextAttemptAt();
+            log.info("Notification retry scheduled for user {} session {} (attempt {}/{}, next at {})",
+                    request.getUserId(), request.getSessionId(),
+                    request.getAttemptCount(), 3, request.getNextAttemptAt());
         }
 
         requestRepository.save(request);

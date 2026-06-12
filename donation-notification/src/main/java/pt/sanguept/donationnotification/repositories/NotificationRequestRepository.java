@@ -19,10 +19,27 @@ public interface NotificationRequestRepository extends JpaRepository<Notificatio
     @Query("SELECT r FROM NotificationRequest r WHERE r.status = :status ORDER BY r.createdAt ASC")
     List<NotificationRequest> findPending(NotificationRequestStatus status, Pageable pageable);
 
-    @Query(value = "SELECT * FROM notification_request WHERE status = :status ORDER BY created_at ASC LIMIT :limit FOR UPDATE SKIP LOCKED",
-            nativeQuery = true)
+    @Query(value = """
+        SELECT * FROM notification_request
+        WHERE status = :status
+          AND (next_attempt_at IS NULL OR next_attempt_at <= NOW())
+        ORDER BY created_at ASC
+        LIMIT :limit
+        FOR UPDATE SKIP LOCKED
+        """, nativeQuery = true)
     List<NotificationRequest> findPendingForProcessing(@Param("status") String status, @Param("limit") int limit);
 
+    @Query(value = """
+        SELECT * FROM notification_request
+        WHERE status = 'PROCESSING'
+          AND last_attempt_at < NOW() - CAST(:timeoutMinutes || ' minutes' AS INTERVAL)
+        FOR UPDATE SKIP LOCKED
+        """, nativeQuery = true)
+    List<NotificationRequest> findStuckProcessing(@Param("timeoutMinutes") int timeoutMinutes);
+
     List<NotificationRequest> findByStatusOrderByCreatedAtDesc(NotificationRequestStatus status);
+
+    @Query("SELECT COUNT(r) FROM NotificationRequest r WHERE r.status = :status")
+    long countByStatus(@Param("status") NotificationRequestStatus status);
 
 }

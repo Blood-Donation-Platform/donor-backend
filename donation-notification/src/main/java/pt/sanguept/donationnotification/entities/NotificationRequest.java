@@ -5,6 +5,7 @@ import lombok.*;
 import pt.sanguept.commoninfra.entities.CreationAuditedEntity;
 import pt.sanguept.donationnotification.enums.NotificationRequestStatus;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -19,6 +20,11 @@ import java.util.UUID;
 public class NotificationRequest extends CreationAuditedEntity {
 
     private static final int MAX_ATTEMPTS = 3;
+
+    private static final Duration[] BACKOFF_DELAYS = {
+        Duration.ofSeconds(30),
+        Duration.ofSeconds(120)
+    };
 
     @Id
     @GeneratedValue
@@ -48,8 +54,21 @@ public class NotificationRequest extends CreationAuditedEntity {
     @Column(name = "last_attempt_at")
     private Instant lastAttemptAt;
 
+    @Column(name = "next_attempt_at")
+    private Instant nextAttemptAt;
+
     public boolean hasExceededMaxAttempts() {
         return attemptCount >= MAX_ATTEMPTS;
+    }
+
+    public void computeNextAttemptAt() {
+        int idx = attemptCount - 1;
+        if (idx < 0) idx = 0;
+        if (idx >= BACKOFF_DELAYS.length) {
+            this.nextAttemptAt = null;
+        } else {
+            this.nextAttemptAt = Instant.now().plus(BACKOFF_DELAYS[idx]);
+        }
     }
 
 }
