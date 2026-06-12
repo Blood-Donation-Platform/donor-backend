@@ -422,23 +422,269 @@ No Micrometer needed. Just a read endpoint.
 
 ---
 
+## 13. Delivery Contract (Corrected Boundary)
+
+| | Incorrect Model | Correct Model |
+|---|---|---|
+| **Unit of work** | `NotificationRequest` | **Unchanged** |
+| **Channel awareness** | Domain layer (`Set<NotificationChannel>`) | **Sender** resolves at runtime |
+| **Fan-out** | Generation layer | **Sender** owns fan-out |
+
+**Core rule:** `NotificationRequest` represents intent to notify a user about a session. It does NOT describe *how* that notification is delivered.
+
+**Sender contract (correct form):**
+
+```java
+interface NotificationSender {
+    void send(NotificationRequest request);
+}
+```
+
+**Sender responsibilities (explicit):**
+- Resolving user delivery channels (from preferences, not domain)
+- Applying per-channel configuration (email/SMS/Telegram)
+- Performing fan-out internally (1 request → N deliveries per channel)
+- Ensuring idempotency across retries and redelivery
+- Handling per-channel failure isolation
+
+**What MUST NOT exist:**
+- No `channels[]` field on any domain entity
+- No delivery strategy in matching layer
+- No fan-out in generation layer
+
+**Trigger for migration:** The existing `send(UUID requestId, UUID userId, UUID sessionId)` signature is acceptable now but should be replaced with `send(NotificationRequest)` before adding the first external channel. The sender should receive the full entity, not extracted fields.
+
+---
+
+## 14. Fan-out Model (Corrected)
+
+**Current assumption (wrong if held long-term):** 1 matched user → 1 request → 1 delivery
+
+**Correct model:** 1 request → sender produces N deliveries (based on runtime resolution)
+
+**Why fan-out belongs in sender, NOT generation:**
+
+Channel selection depends on:
+- User preferences (mutable — update independently of matching)
+- Enabled integrations (system-level config — toggle without re-matching)
+- Channel health (runtime condition — circuit breaker per channel)
+- Future A/B routing or fallback logic
+
+None of these belong in domain or matching layers.
+
+**Correct pipeline:**
+
+```
+SessionPublishedEvent
+    → MatchingService
+    → Set<UUID> userIds
+
+    → NotificationGenerationService
+    → NotificationRequest(userId, sessionId, idempotencyKey)
+
+    → NotificationProcessor / MQ consumer
+    → NotificationSender.send(request)
+
+    → Sender:
+         resolve user channels
+         fan-out internally
+         deliver per channel
+         ensure idempotency per channel
+```
+
+**Why generation-level fan-out is wrong:**
+- Explodes DB rows (1 request becomes N rows preemptively)
+- Couples matching to delivery topology
+- Schema changes required every time a channel is added
+- Breaks retry boundaries (retrying all channels when only one failed)
+
+---
+
+## 15. Queue Ordering & Partitioning (Corrected)
+
+**Problem with current design:** Single FIFO queue (`created_at ASC`) fails under burst traffic, mixed urgency workloads, and replay/backfill operations.
+
+**A `priority INT` column alone does NOT solve structural contention** — it still shares a single queue with sorting overhead under load.
+
+**Correct model: logical queue partitioning.**
+
+Instead of encoding priority per row, define separate processing lanes:
+
+| Queue | Purpose |
+|---|---|
+| `notification.urgent` | Expiring / high-impact sessions (e.g. session starts in <2h) |
+| `notification.normal` | Standard delivery |
+| `notification.backfill` | Replay / rebuild operations |
+
+**Routing rule:** At generation or enqueue time:
+```
+if session.startAt - now < threshold → urgent queue
+else → normal queue
+```
+
+Replay always routes to backfill queue.
+
+**Why partitioning beats a priority column:**
+- Isolates workload types — urgent never starves behind backfill
+- Prevents contention by design (not by sorting)
+- Maps cleanly to MQ later: RabbitMQ exchanges, Kafka partitions
+- Each partition can have independent processing rate, batch size, and retry policy
+
+**Implementation:** Initially a `queue` column on `notification_request`. Later, separate physical queues.
+
+---
+
+## 16. Idempotency Model (P0 — Critical Missing Concept)
+
+| | Current | Required |
+|---|---|---|
+| **Mechanism** | `existsByUserIdAndSessionId()` + `UNIQUE(user_id, session_id)` | Explicit `idempotency_key` |
+| **Scope** | Application-level DB check | First-class domain field + DB index |
+| **Survives MQ?** | No — MQ redelivery bypasses application check | Yes — key is embedded in the message |
+
+**Problem with current approach:**
+- `existsByUserIdAndSessionId()` works for single-instance DB writes
+- Fails under MQ redelivery (same key, different code path)
+- Does not generalize to cross-system operations
+- Uniqueness constraint is a side effect, not an explicit contract
+
+**Correct model:**
+
+```java
+// Computed at generation time
+String idempotencyKey = hash(sessionId + ":" + userId);
+```
+
+**Schema addition:**
+
+```sql
+ALTER TABLE notification_request
+ADD COLUMN idempotency_key VARCHAR(255);
+
+CREATE UNIQUE INDEX uk_notification_idempotency
+ON notification_request(idempotency_key);
+```
+
+**Rule:** All notification execution must be idempotent at sender level using `idempotency_key`, not application-level existence checks. The key is the correctness boundary for retries, MQ redelivery, sender fan-out, and future distributed architectures.
+
+**Priority:** P0. Must be implemented before MQ migration or external channel integration. Implementable now with a migration and a hash function — low effort, high correctness impact.
+
+---
+
+## 17. Replayability / Reprocessing Strategy
+
+| | Current | Risk |
+|---|---|---|
+| **Model** | One-time generation | No safe reprocessing |
+
+**Problem:** If matching logic changes, old sessions are frozen. No recomputation possible. Bug fixes cannot be applied retroactively.
+
+**Required capability:**
+```
+rebuildNotifications(sessionId)
+rebuildNotifications(fromDate, toDate)
+```
+
+**Critical subtlety — deterministic matching contract:**
+
+Matching must be reproducible. Current inputs change:
+- Subscriptions added/removed after session publication
+- Preferences updated (mute/enable)
+- Territory hierarchy restructured
+
+Replay is NOT just re-running the function. It requires either:
+- **Snapshot strategy:** Capture subscription/preference/territory state at the moment of generation, store alongside the request, replay against the snapshot
+- **Approximate strategy:** Replay against current state, accept non-determinism, document that replay may produce different results
+
+Option A is correct for auditability. Option B is acceptable for disaster recovery.
+
+**Two modes:**
+- Live mode → event-driven generation (current)
+- Replay mode → explicit invocation, routed to `backfill` queue
+
+---
+
+## 18. User Notification State Model (Observability Gap)
+
+| | Current | Risk |
+|---|---|---|
+| **Data** | `NotificationRequest` | Fragmented visibility |
+
+**Problem:** You cannot answer: "what did user X actually receive?", "what was suppressed?", "what failed?"
+
+**Required abstraction — read model:**
+
+```java
+class UserNotificationState {
+    UUID userId;
+    UUID sessionId;
+    NotificationStatus status;
+    Instant lastAttemptAt;
+    String failureReason;
+}
+```
+
+**Purpose:** This is NOT operational data. It is a support/debugging + analytics read model. Derived from `NotificationRequest`, materialized on delivery.
+
+**Trigger for introduction:** First user-facing notification history feature or support/debug tooling.
+
+---
+
+## Architecture Core Model
+
+```
+┌─────────────┐
+│   MATCHING   │  input:  session + subscriptions
+│              │  output: Set<UUID> userIds
+│              │  constraint: pure, no channels, no delivery logic
+└──────┬───────┘
+       │
+       ▼
+┌─────────────┐
+│  GENERATION  │  input:  Set<UUID> userIds
+│              │  output: NotificationRequest(userId, sessionId, idempotencyKey)
+│              │  constraint: persistence only, no fan-out, no channel awareness
+└──────┬───────┘
+       │
+       ▼
+┌─────────────┐
+│    SENDER    │  input:  NotificationRequest
+│              │  responsibilities:
+│              │    - resolve user channels
+│              │    - fan-out internally
+│              │    - deliver per channel
+│              │    - ensure idempotency
+│              │  constraint: no domain logic, no matching, no subscription awareness
+└─────────────┘
+```
+
+**This boundary is the single most important architectural decision in the system.** Matching should never know channels. Sender should never know subscriptions.
+
+---
+
 ## 12. Priorities & Trigger Conditions
 
 Ranked by "when this breaks, it breaks hard":
 
 | Priority | Item | Trigger condition | Effort |
 |---|---|---|---|
+| P0 | Idempotency key (Section 16) | Before MQ migration or external channels | Low |
 | P0 | Radius: PostGIS ST_DWithin (Section 2) | >10k radius subs OR >100 sessions/min | Medium |
 | P0 | Batch preference query (Section 4) | Sessions match >500 users | Low |
-| P1 | Module split: domain vs delivery (Section 8) | Before adding Telegram/email/SMS | Medium |
+| P1 | Sender contract: `send(NotificationRequest)` (Section 13) | Before first external channel | Low |
+| P1 | Module split: domain vs delivery (Section 8) | Before Telegram/email/SMS | Medium |
 | P1 | Territory interface decoupling (Section 6) | Before territory module refactoring | Low |
 | P1 | NotificationRequest bulk insert (Section 5) | Sessions match >1k users | Low |
 | P2 | Message queue (Section 1) | >10 sessions/sec OR latency SLA <10s | High |
 | P2 | Territory hierarchy caching (Section 7) | >100 sessions/min | Low |
+| P2 | Queue partitioning (Section 15) | >500 pending requests sustained | Low |
+| P2 | Fan-out → sender (Section 14) | Before multi-channel delivery | Low |
 | P3 | Admin: optimized hierarchy (Section 3) | >50 hierarchy levels OR >500 queries/min | Medium |
 | P3 | Named radius subscriptions (Section 10) | User complaints about duplicates OR UI addition | Medium |
+| P3 | User notification state model (Section 18) | First support/debug tooling | Low |
 | P4 | Single-table split (Section 9) | 3rd subscription type added | Medium |
 | P4 | Observability (Section 11) | First production incident | Low |
+| P4 | Replayability (Section 17) | Matching logic change or bug fix | Medium |
 
 ---
 
@@ -453,9 +699,14 @@ The `donation-notification` module was deliberately built with:
 - **Single-table subscription model** with nullable columns
 - **Tight coupling to territory internals** via `DivisionService`
 - **Log-based observability** instead of metrics infrastructure
+- **Implicit ordering** instead of explicit queue partitioning
+- **Application-level dedup** instead of an explicit idempotency key
+- **Sender as a sink** (`send(userId, sessionId)`) instead of sender as the fan-out owner
 
-Every one of these was a deliberate trade-off: **simple now, easy to replace later**. None of them are architectural mistakes. They are acceleration decisions.
+Every one of these was a deliberate trade-off: **simple now, easy to replace later**. None are architectural mistakes. They are acceleration decisions.
 
-The entire system can scale to ~10,000 users and ~100 sessions/day with zero changes. Beyond that, the P0 items above become the first optimization targets.
+The system can scale to ~10,000 users and ~100 sessions/day with zero changes. Beyond that, the P0 items above (idempotency key, spatial matching, batch preferences) are the first three targets.
 
-Everything in this document should be reevaluated after the first external delivery channel (Telegram/email/SMS) is integrated, because the throughput characteristics of external I/O will dominate the performance profile.
+The single most important architectural boundary to protect: **matching → generation → sender**. Matching never knows channels. Sender never knows subscriptions. This boundary is what prevents notification systems from becoming unmaintainable.
+
+Everything in this document should be reevaluated after the first external delivery channel is integrated, because external I/O dominates the performance profile.
