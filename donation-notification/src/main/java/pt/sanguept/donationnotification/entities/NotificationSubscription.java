@@ -8,7 +8,11 @@ import pt.sanguept.donationnotification.enums.SubscriptionType;
 import java.util.UUID;
 
 @Entity
-@Table(name = "notification_subscription")
+@Table(name = "notification_subscription",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "administrative_division_id"}),
+                @UniqueConstraint(columnNames = {"user_id", "latitude", "longitude", "radius_km"})
+        })
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
