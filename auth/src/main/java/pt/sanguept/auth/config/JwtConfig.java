@@ -1,4 +1,4 @@
-package pt.sanguept.identity.config;
+package pt.sanguept.auth.config;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.OctetSequenceKey;

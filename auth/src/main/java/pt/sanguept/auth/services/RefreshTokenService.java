@@ -1,10 +1,10 @@
-package pt.sanguept.identity.services;
+package pt.sanguept.auth.services;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pt.sanguept.identity.entities.RefreshToken;
-import pt.sanguept.identity.repositories.RefreshTokenRepository;
+import pt.sanguept.auth.entities.RefreshToken;
+import pt.sanguept.auth.repositories.RefreshTokenRepository;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

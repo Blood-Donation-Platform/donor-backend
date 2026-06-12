@@ -1,4 +1,4 @@
-package pt.sanguept.identity.services;
+package pt.sanguept.auth.services;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.sanguept.commoncore.interfaces.UserAccountProvider;
 import pt.sanguept.commoncore.models.AppPrincipal;
-import pt.sanguept.identity.dtos.TokenPairResponse;
+import pt.sanguept.auth.dtos.TokenPairResponse;
 
 @Service
 @Transactional

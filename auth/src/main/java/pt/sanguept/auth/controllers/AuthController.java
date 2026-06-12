@@ -1,16 +1,16 @@
-package pt.sanguept.identity.controllers;
+package pt.sanguept.auth.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pt.sanguept.identity.dtos.LoginRequest;
-import pt.sanguept.identity.dtos.LoginResponse;
-import pt.sanguept.identity.dtos.RefreshRequest;
-import pt.sanguept.identity.dtos.TokenPairResponse;
-import pt.sanguept.identity.services.AuthService;
-import pt.sanguept.identity.services.JwtService;
+import pt.sanguept.auth.dtos.LoginRequest;
+import pt.sanguept.auth.dtos.LoginResponse;
+import pt.sanguept.auth.dtos.RefreshRequest;
+import pt.sanguept.auth.dtos.TokenPairResponse;
+import pt.sanguept.auth.services.AuthService;
+import pt.sanguept.auth.services.JwtService;
 
 @RestController
 @RequestMapping("/api/v1/auth")

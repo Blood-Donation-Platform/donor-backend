@@ -1,4 +1,4 @@
-package pt.sanguept.identity.controllers;
+package pt.sanguept.auth.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

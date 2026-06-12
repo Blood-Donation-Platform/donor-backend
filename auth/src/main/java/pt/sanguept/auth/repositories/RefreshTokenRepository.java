@@ -1,8 +1,8 @@
-package pt.sanguept.identity.repositories;
+package pt.sanguept.auth.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import pt.sanguept.identity.entities.RefreshToken;
+import pt.sanguept.auth.entities.RefreshToken;
 
 import java.util.List;
 import java.util.Optional;

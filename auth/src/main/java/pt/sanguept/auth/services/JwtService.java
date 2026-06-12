@@ -1,4 +1,4 @@
-package pt.sanguept.identity.services;
+package pt.sanguept.auth.services;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,4 +1,4 @@
-package pt.sanguept.identity.dtos;
+package pt.sanguept.auth.dtos;
 
 import lombok.Builder;
 

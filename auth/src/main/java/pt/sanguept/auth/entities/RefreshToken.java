@@ -1,4 +1,4 @@
-package pt.sanguept.identity.entities;
+package pt.sanguept.auth.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
