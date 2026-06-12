@@ -51,7 +51,7 @@ class NotificationProcessorTest {
         assertThat(request.getStatus()).isEqualTo(NotificationRequestStatus.PROCESSED);
         assertThat(request.getAttemptCount()).isEqualTo(1);
         assertThat(request.getProcessedAt()).isNotNull();
-        verify(sender).send(request.getId(), USER_ID, SESSION_ID);
+        verify(sender).send(request);
     }
 
     @Test
@@ -72,7 +72,7 @@ class NotificationProcessorTest {
         when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
         doThrow(new RuntimeException("Connection refused"))
-                .when(sender).send(request.getId(), USER_ID, SESSION_ID);
+                .when(sender).send(request);
 
         processor.processPendingRequests();
 
@@ -90,7 +90,7 @@ class NotificationProcessorTest {
         when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
         doThrow(new RuntimeException("Connection refused"))
-                .when(sender).send(request.getId(), USER_ID, SESSION_ID);
+                .when(sender).send(request);
 
         processor.processPendingRequests();
 
@@ -107,7 +107,7 @@ class NotificationProcessorTest {
 
         processor.processPendingRequests();
 
-        verify(sender, never()).send(any(), any(), any());
+        verify(sender, never()).send(any());
         verify(requestRepository, never()).save(any());
     }
 

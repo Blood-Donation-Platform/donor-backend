@@ -51,7 +51,7 @@ public class NotificationProcessor {
             requestRepository.save(request);
 
             try {
-                sender.send(request.getId(), request.getUserId(), request.getSessionId());
+                sender.send(request);
 
                 request.setStatus(NotificationRequestStatus.PROCESSED);
                 request.setProcessedAt(Instant.now());
