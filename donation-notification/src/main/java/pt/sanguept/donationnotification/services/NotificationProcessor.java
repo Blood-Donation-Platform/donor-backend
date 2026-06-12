@@ -2,7 +2,7 @@ package pt.sanguept.donationnotification.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,16 +17,17 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class NotificationProcessor {
 
-    private static final int BATCH_SIZE = 50;
-
     private final NotificationRequestRepository requestRepository;
     private final NotificationSender sender;
+
+    @Value("${app.notification.processing.batch-size:50}")
+    private int batchSize;
 
     @Scheduled(fixedDelayString = "${app.notification.processing.interval:30000}")
     @Transactional
     public void processPendingRequests() {
-        var pending = requestRepository.findPending(
-                NotificationRequestStatus.PENDING, PageRequest.of(0, BATCH_SIZE));
+        var pending = requestRepository.findPendingForProcessing(
+                NotificationRequestStatus.PENDING.name(), batchSize);
 
         if (pending.isEmpty()) {
             log.debug("No pending notification requests");
@@ -35,28 +36,31 @@ public class NotificationProcessor {
 
         log.info("Processing {} pending notification requests", pending.size());
 
+        int succeeded = 0;
+        int failed = 0;
+
         for (NotificationRequest request : pending) {
-            processRequest(request);
-        }
-    }
-
-    private void processRequest(NotificationRequest request) {
-        request.setStatus(NotificationRequestStatus.PROCESSING);
-        request.setAttemptCount(request.getAttemptCount() + 1);
-        request.setLastAttemptAt(Instant.now());
-        requestRepository.save(request);
-
-        try {
-            sender.send(request.getUserId(), request.getSessionId());
-
-            request.setStatus(NotificationRequestStatus.PROCESSED);
-            request.setProcessedAt(Instant.now());
+            request.setStatus(NotificationRequestStatus.PROCESSING);
+            request.setAttemptCount(request.getAttemptCount() + 1);
+            request.setLastAttemptAt(Instant.now());
             requestRepository.save(request);
 
-            log.info("Notification processed for user {} session {}", request.getUserId(), request.getSessionId());
-        } catch (Exception e) {
-            handleFailure(request, e);
+            try {
+                sender.send(request.getUserId(), request.getSessionId());
+
+                request.setStatus(NotificationRequestStatus.PROCESSED);
+                request.setProcessedAt(Instant.now());
+                requestRepository.save(request);
+                succeeded++;
+
+                log.info("Notification processed for user {} session {}", request.getUserId(), request.getSessionId());
+            } catch (Exception e) {
+                handleFailure(request, e);
+                failed++;
+            }
         }
+
+        log.info("Batch complete: {} processed, {} succeeded, {} failed", pending.size(), succeeded, failed);
     }
 
     private void handleFailure(NotificationRequest request, Exception e) {

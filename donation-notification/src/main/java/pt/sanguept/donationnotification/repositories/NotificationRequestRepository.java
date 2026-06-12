@@ -3,6 +3,7 @@ package pt.sanguept.donationnotification.repositories;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import pt.sanguept.donationnotification.entities.NotificationRequest;
 import pt.sanguept.donationnotification.enums.NotificationRequestStatus;
@@ -17,5 +18,11 @@ public interface NotificationRequestRepository extends JpaRepository<Notificatio
 
     @Query("SELECT r FROM NotificationRequest r WHERE r.status = :status ORDER BY r.createdAt ASC")
     List<NotificationRequest> findPending(NotificationRequestStatus status, Pageable pageable);
+
+    @Query(value = "SELECT * FROM notification_request WHERE status = :status ORDER BY created_at ASC LIMIT :limit FOR UPDATE SKIP LOCKED",
+            nativeQuery = true)
+    List<NotificationRequest> findPendingForProcessing(@Param("status") String status, @Param("limit") int limit);
+
+    List<NotificationRequest> findByStatusOrderByCreatedAtDesc(NotificationRequestStatus status);
 
 }

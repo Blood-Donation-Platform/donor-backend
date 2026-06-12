@@ -1,11 +1,12 @@
 package pt.sanguept.donationnotification.services;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 import pt.sanguept.donationnotification.entities.NotificationRequest;
 import pt.sanguept.donationnotification.enums.NotificationRequestStatus;
 import pt.sanguept.donationnotification.repositories.NotificationRequestRepository;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,10 +33,15 @@ class NotificationProcessorTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID SESSION_ID = UUID.randomUUID();
 
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(processor, "batchSize", 50);
+    }
+
     @Test
     void shouldProcessPendingRequestSuccessfully() {
         var request = pendingRequest();
-        when(requestRepository.findPending(eq(NotificationRequestStatus.PENDING), any(Pageable.class)))
+        when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
 
         processor.processPendingRequests();
@@ -49,7 +55,7 @@ class NotificationProcessorTest {
     @Test
     void shouldSetProcessingStatusBeforeSending() {
         var request = pendingRequest();
-        when(requestRepository.findPending(eq(NotificationRequestStatus.PENDING), any(Pageable.class)))
+        when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
 
         processor.processPendingRequests();
@@ -61,7 +67,7 @@ class NotificationProcessorTest {
     @Test
     void shouldRetryOnFailureAndGoBackToPending() {
         var request = pendingRequest();
-        when(requestRepository.findPending(eq(NotificationRequestStatus.PENDING), any(Pageable.class)))
+        when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
         doThrow(new RuntimeException("Connection refused")).when(sender).send(USER_ID, SESSION_ID);
 
@@ -77,7 +83,7 @@ class NotificationProcessorTest {
     void shouldSetFailedAfterMaxAttempts() {
         var request = pendingRequest();
         request.setAttemptCount(2);
-        when(requestRepository.findPending(eq(NotificationRequestStatus.PENDING), any(Pageable.class)))
+        when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of(request));
         doThrow(new RuntimeException("Connection refused")).when(sender).send(USER_ID, SESSION_ID);
 
@@ -90,7 +96,7 @@ class NotificationProcessorTest {
 
     @Test
     void shouldDoNothingWhenNoPendingRequests() {
-        when(requestRepository.findPending(eq(NotificationRequestStatus.PENDING), any(Pageable.class)))
+        when(requestRepository.findPendingForProcessing(eq("PENDING"), eq(50)))
                 .thenReturn(List.of());
 
         processor.processPendingRequests();
