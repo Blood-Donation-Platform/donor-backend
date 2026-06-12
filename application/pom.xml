@@ -58,6 +58,11 @@
             <artifactId>donation-session</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>donation-notification</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
