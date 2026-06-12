@@ -9,13 +9,16 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "notification_request")
+@Table(name = "notification_request",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "session_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Builder
 public class NotificationRequest extends CreationAuditedEntity {
+
+    private static final int MAX_ATTEMPTS = 3;
 
     @Id
     @GeneratedValue
@@ -37,5 +40,16 @@ public class NotificationRequest extends CreationAuditedEntity {
 
     @Column(name = "failure_reason")
     private String failureReason;
+
+    @Column(name = "attempt_count", nullable = false)
+    @Builder.Default
+    private int attemptCount = 0;
+
+    @Column(name = "last_attempt_at")
+    private Instant lastAttemptAt;
+
+    public boolean hasExceededMaxAttempts() {
+        return attemptCount >= MAX_ATTEMPTS;
+    }
 
 }
