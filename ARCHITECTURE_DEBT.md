@@ -422,7 +422,7 @@ No Micrometer needed. Just a read endpoint.
 
 ---
 
-## 13. Delivery Contract (Corrected Boundary)
+## 12. Delivery Contract (Corrected Boundary)
 
 | | Incorrect Model | Correct Model |
 |---|---|---|
@@ -456,7 +456,7 @@ interface NotificationSender {
 
 ---
 
-## 14. Fan-out Model (Corrected)
+## 13. Fan-out Model (Corrected)
 
 **Current assumption (wrong if held long-term):** 1 matched user → 1 request → 1 delivery
 
@@ -500,7 +500,7 @@ SessionPublishedEvent
 
 ---
 
-## 15. Queue Ordering & Partitioning (Corrected)
+## 14. Queue Ordering & Partitioning (Corrected)
 
 **Problem with current design:** Single FIFO queue (`created_at ASC`) fails under burst traffic, mixed urgency workloads, and replay/backfill operations.
 
@@ -534,7 +534,7 @@ Replay always routes to backfill queue.
 
 ---
 
-## 16. Idempotency Model (P0 — Critical Missing Concept)
+## 15. Idempotency Model (P0 — Critical Missing Concept)
 
 | | Current | Required |
 |---|---|---|
@@ -571,7 +571,7 @@ ON notification_request(idempotency_key);
 
 ---
 
-## 17. Replayability / Reprocessing Strategy
+## 16. Replayability / Reprocessing Strategy
 
 | | Current | Risk |
 |---|---|---|
@@ -604,7 +604,7 @@ Option A is correct for auditability. Option B is acceptable for disaster recove
 
 ---
 
-## 18. User Notification State Model (Observability Gap)
+## 17. User Notification State Model (Observability Gap)
 
 | | Current | Risk |
 |---|---|---|
@@ -662,29 +662,29 @@ class UserNotificationState {
 
 ---
 
-## 12. Priorities & Trigger Conditions
+## 18. Priorities & Trigger Conditions
 
 Ranked by "when this breaks, it breaks hard":
 
 | Priority | Item | Trigger condition | Effort |
 |---|---|---|---|
-| P0 | Idempotency key (Section 16) | Before MQ migration or external channels | Low |
+| P0 | Idempotency key (Section 15) | Before MQ migration or external channels | Low |
 | P0 | Radius: PostGIS ST_DWithin (Section 2) | >10k radius subs OR >100 sessions/min | Medium |
 | P0 | Batch preference query (Section 4) | Sessions match >500 users | Low |
-| P1 | Sender contract: `send(NotificationRequest)` (Section 13) | Before first external channel | Low |
+| P1 | Sender contract: `send(NotificationRequest)` (Section 12) | Before first external channel | Low |
 | P1 | Module split: domain vs delivery (Section 8) | Before Telegram/email/SMS | Medium |
 | P1 | Territory interface decoupling (Section 6) | Before territory module refactoring | Low |
 | P1 | NotificationRequest bulk insert (Section 5) | Sessions match >1k users | Low |
 | P2 | Message queue (Section 1) | >10 sessions/sec OR latency SLA <10s | High |
 | P2 | Territory hierarchy caching (Section 7) | >100 sessions/min | Low |
-| P2 | Queue partitioning (Section 15) | >500 pending requests sustained | Low |
-| P2 | Fan-out → sender (Section 14) | Before multi-channel delivery | Low |
+| P2 | Queue partitioning (Section 14) | >500 pending requests sustained | Low |
+| P2 | Fan-out → sender (Section 13) | Before multi-channel delivery | Low |
 | P3 | Admin: optimized hierarchy (Section 3) | >50 hierarchy levels OR >500 queries/min | Medium |
 | P3 | Named radius subscriptions (Section 10) | User complaints about duplicates OR UI addition | Medium |
-| P3 | User notification state model (Section 18) | First support/debug tooling | Low |
+| P3 | User notification state model (Section 17) | First support/debug tooling | Low |
 | P4 | Single-table split (Section 9) | 3rd subscription type added | Medium |
 | P4 | Observability (Section 11) | First production incident | Low |
-| P4 | Replayability (Section 17) | Matching logic change or bug fix | Medium |
+| P4 | Replayability (Section 16) | Matching logic change or bug fix | Medium |
 
 ---
 
