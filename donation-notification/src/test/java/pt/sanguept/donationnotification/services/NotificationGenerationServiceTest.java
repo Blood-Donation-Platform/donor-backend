@@ -49,8 +49,7 @@ class NotificationGenerationServiceTest {
         session.setId(SESSION_ID);
         when(sessionRepository.findById(SESSION_ID)).thenReturn(Optional.of(session));
         when(matchingService.findInterestedUsers(session)).thenReturn(Set.of(USER_1, USER_2));
-        when(requestRepository.existsByUserIdAndSessionId(USER_1, SESSION_ID)).thenReturn(false);
-        when(requestRepository.existsByUserIdAndSessionId(USER_2, SESSION_ID)).thenReturn(false);
+        when(requestRepository.existsByIdempotencyKey(anyString())).thenReturn(false);
 
         generationService.handle(event);
 
@@ -65,7 +64,7 @@ class NotificationGenerationServiceTest {
         session.setId(SESSION_ID);
         when(sessionRepository.findById(SESSION_ID)).thenReturn(Optional.of(session));
         when(matchingService.findInterestedUsers(session)).thenReturn(Set.of(USER_1));
-        when(requestRepository.existsByUserIdAndSessionId(USER_1, SESSION_ID)).thenReturn(true);
+        when(requestRepository.existsByIdempotencyKey(anyString())).thenReturn(true);
 
         generationService.handle(event);
 
@@ -94,7 +93,7 @@ class NotificationGenerationServiceTest {
         session.setId(SESSION_ID);
         when(sessionRepository.findById(SESSION_ID)).thenReturn(Optional.of(session));
         when(matchingService.findInterestedUsers(session)).thenReturn(Set.of(USER_1));
-        when(requestRepository.existsByUserIdAndSessionId(USER_1, SESSION_ID)).thenReturn(false);
+        when(requestRepository.existsByIdempotencyKey(anyString())).thenReturn(false);
 
         generationService.handle(event);
 
@@ -102,6 +101,7 @@ class NotificationGenerationServiceTest {
                 request.getStatus() == NotificationRequestStatus.PENDING
                 && request.getUserId().equals(USER_1)
                 && request.getSessionId().equals(SESSION_ID)
+                && request.getIdempotencyKey() != null
         ));
     }
 }

@@ -2,6 +2,7 @@ package pt.sanguept.donationnotification.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -11,6 +12,7 @@ import pt.sanguept.donationsession.entities.DonationSession;
 import pt.sanguept.donationsession.events.SessionPublishedEvent;
 import pt.sanguept.donationsession.repositories.DonationSessionRepository;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,7 +25,7 @@ public class NotificationGenerationService {
     private final NotificationRequestRepository requestRepository;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handle(SessionPublishedEvent event) {
         DonationSession session = sessionRepository.findById(event.sessionId())
                 .orElseThrow(() -> new IllegalArgumentException("Session not found: " + event.sessionId()));
@@ -31,14 +33,22 @@ public class NotificationGenerationService {
         Set<UUID> interestedUsers = matchingService.findInterestedUsers(session);
 
         for (UUID userId : interestedUsers) {
-            if (!requestRepository.existsByUserIdAndSessionId(userId, session.getId())) {
+            String idempotencyKey = computeIdempotencyKey(session.getId(), userId);
+            if (!requestRepository.existsByIdempotencyKey(idempotencyKey)) {
                 NotificationRequest request = NotificationRequest.builder()
                         .userId(userId)
                         .sessionId(session.getId())
+                        .idempotencyKey(idempotencyKey)
                         .build();
                 requestRepository.save(request);
             }
         }
+    }
+
+    private static String computeIdempotencyKey(UUID sessionId, UUID userId) {
+        return UUID.nameUUIDFromBytes(
+                (sessionId.toString() + ":" + userId.toString()).getBytes(StandardCharsets.UTF_8)
+        ).toString();
     }
 
 }

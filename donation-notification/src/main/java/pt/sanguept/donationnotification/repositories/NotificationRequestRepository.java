@@ -16,6 +16,8 @@ public interface NotificationRequestRepository extends JpaRepository<Notificatio
 
     boolean existsByUserIdAndSessionId(UUID userId, UUID sessionId);
 
+    boolean existsByIdempotencyKey(String idempotencyKey);
+
     @Query("SELECT r FROM NotificationRequest r WHERE r.status = :status ORDER BY r.createdAt ASC")
     List<NotificationRequest> findPending(NotificationRequestStatus status, Pageable pageable);
 

@@ -57,6 +57,9 @@ public class NotificationRequest extends CreationAuditedEntity {
     @Column(name = "next_attempt_at")
     private Instant nextAttemptAt;
 
+    @Column(name = "idempotency_key", nullable = false, updatable = false)
+    private String idempotencyKey;
+
     public boolean hasExceededMaxAttempts() {
         return attemptCount >= MAX_ATTEMPTS;
     }
