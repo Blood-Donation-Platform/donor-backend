@@ -17,6 +17,8 @@ spring:
           time_zone: UTC
   config:
     import: optional:file:.env[.properties]
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
 jwt:
   secret: ${JWT_SECRET:change-me-to-a-long-random-string-at-least-32-chars}
@@ -28,3 +30,8 @@ app:
     enabled: ${BOOTSTRAP_ENABLED:true}
     admin-email: ${BOOTSTRAP_ADMIN_EMAIL:admin@sanguept.pt}
     admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:admin}
+  communications:
+    enabled: ${COMMUNICATIONS_ENABLED:true}
+    email:
+      enabled: ${EMAIL_ENABLED:true}
+      from: ${EMAIL_FROM:noreply@sanguept.pt}
