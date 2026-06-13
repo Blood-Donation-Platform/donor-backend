@@ -1,4 +1,4 @@
-package pt.sanguept.donationnotification.services;
+package pt.sanguept.donationnotificationdelivery;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

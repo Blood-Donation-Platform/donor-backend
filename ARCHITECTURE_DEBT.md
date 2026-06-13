@@ -276,7 +276,7 @@ With `@EnableCaching` and a Caffeine or Redis cache backend. Even a Spring defau
 
 ## 7. Module Split: Domain vs Delivery
 
-**Current state:** Everything in `donation-notification`.
+**Current state:** Partial split implemented. Delivery module (`donation-notification-delivery`) now contains `NotificationSender` interface, `LoggingNotificationSender`, `NotificationProcessor`, and `NotificationSchedulingConfig`. Domain module (`donation-notification`) retains entities, repositories, services (matching, generation, preferences, subscriptions), controllers, and `NotificationRequestService`.
 
 | Package | Responsibility | Future module |
 |---|---|---|
@@ -559,7 +559,7 @@ Ranked by "when this breaks, it breaks hard":
 | Priority | Item | Trigger condition | Effort |
 |---|---|---|---|
 | P0 | Radius: PostGIS ST_DWithin (Section 2) | >10k radius subs OR >100 sessions/min | Medium |
-| P1 | Module split: domain vs delivery (Section 7) | Before Telegram/email/SMS | Medium |
+| ~~P1~~ PARTIAL | Module split: domain vs delivery (Section 7) | Before Telegram/email/SMS | Medium |
 | P1 | Territory interface decoupling (Section 5) | Before territory module refactoring | Low |
 | P1 | NotificationRequest bulk insert (Section 4) | Sessions match >1k users | Low |
 | P2 | Message queue (Section 1) | >10 sessions/sec OR latency SLA <10s | High |

@@ -1,4 +1,4 @@
-package pt.sanguept.donationnotification.services;
+package pt.sanguept.donationnotificationdelivery;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
