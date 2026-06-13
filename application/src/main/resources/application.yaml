@@ -17,6 +17,17 @@ spring:
           time_zone: UTC
   config:
     import: optional:file:.env[.properties]
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   secret: ${JWT_SECRET:change-me-to-a-long-random-string-at-least-32-chars}
@@ -28,3 +39,8 @@ app:
     enabled: ${BOOTSTRAP_ENABLED:true}
     admin-email: ${BOOTSTRAP_ADMIN_EMAIL:admin@sanguept.pt}
     admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:admin}
+  communications:
+    enabled: ${COMMUNICATIONS_ENABLED:true}
+    email:
+      enabled: ${EMAIL_ENABLED:true}
+      from: ${EMAIL_FROM:noreply@sanguept.pt}

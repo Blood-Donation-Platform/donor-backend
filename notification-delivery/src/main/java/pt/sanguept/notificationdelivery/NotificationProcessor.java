@@ -11,6 +11,7 @@ import pt.sanguept.notification.enums.NotificationRequestStatus;
 import pt.sanguept.notification.repositories.NotificationRequestRepository;
 
 import java.time.Instant;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -20,7 +21,7 @@ public class NotificationProcessor {
     private static final int STUCK_TIMEOUT_MINUTES = 5;
 
     private final NotificationRequestRepository requestRepository;
-    private final NotificationSender sender;
+    private final List<NotificationSender> senders;
 
     @Value("${app.notification.processing.batch-size:50}")
     private int batchSize;
@@ -51,7 +52,9 @@ public class NotificationProcessor {
             requestRepository.save(request);
 
             try {
-                sender.send(request);
+                for (NotificationSender sender : senders) {
+                    sender.send(request);
+                }
 
                 request.setStatus(NotificationRequestStatus.PROCESSED);
                 request.setProcessedAt(Instant.now());

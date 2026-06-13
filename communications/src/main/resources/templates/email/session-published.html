@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <p th:text="'Olá ' + ${firstName} + '!'">Olá!</p>
+    <p>Uma nova sessão de doação foi publicada na sua área:</p>
+    <p>
+        <strong th:text="${title}">Título da sessão</strong><br>
+    </p>
+    <p th:if="${location != null}">
+        <strong>Local:</strong> <span th:text="${location}">Local</span>
+    </p>
+    <p th:if="${startAt != null}">
+        <strong>Início:</strong> <span th:text="${startAt}">Data início</span>
+    </p>
+    <p th:if="${endAt != null}">
+        <strong>Fim:</strong> <span th:text="${endAt}">Data fim</span>
+    </p>
+    <p th:if="${description != null}" th:text="${description}">Descrição</p>
+    <p>Obrigado por contribuir!</p>
+</body>
+</html>
