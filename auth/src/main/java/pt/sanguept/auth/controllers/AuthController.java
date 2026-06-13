@@ -1,16 +1,19 @@
 package pt.sanguept.auth.controllers;
 
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import pt.sanguept.auth.dtos.LoginRequest;
-import pt.sanguept.auth.dtos.LoginResponse;
-import pt.sanguept.auth.dtos.RefreshRequest;
-import pt.sanguept.auth.dtos.TokenPairResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import pt.sanguept.auth.dtos.*;
 import pt.sanguept.auth.services.AuthService;
 import pt.sanguept.auth.services.JwtService;
+import pt.sanguept.auth.services.RegistrationService;
+import pt.sanguept.auth.services.VerificationTokenService;
+import pt.sanguept.user.dtos.CreateUserRequest;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -18,10 +21,48 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final RegistrationService registrationService;
+    private final VerificationTokenService tokenService;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService, JwtService jwtService,
+                          RegistrationService registrationService,
+                          VerificationTokenService tokenService) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.registrationService = registrationService;
+        this.tokenService = tokenService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody CreateUserRequest request) {
+        registrationService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Registration successful. Check your email to verify your account."));
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam String token) {
+        tokenService.verifyEmail(token);
+        return ResponseEntity.ok(Map.of("message", "Email verified successfully. You can now log in."));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        tokenService.createAndSendPasswordResetEmail(request.email());
+        return ResponseEntity.ok(Map.of("message", "If an account exists with that email, a reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        tokenService.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully. You can now log in."));
+    }
+
+    @PostMapping("/resend-verification")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> resendVerification(@RequestParam UUID userId) {
+        tokenService.sendVerificationEmailForUser(userId);
+        return ResponseEntity.ok(Map.of("message", "Verification email sent."));
     }
 
     @PostMapping("/login")
