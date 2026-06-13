@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <p th:if="${firstName != null and !firstName.isEmpty()}" th:text="'Olá ' + ${firstName} + '!'">Olá!</p>
+    <p th:if="${firstName == null or firstName.isEmpty()}">Olá!</p>
+    <p>Obrigado por se registar no SanguePT.</p>
+    <p>Para ativar a sua conta, clique no link abaixo:</p>
+    <p>
+        <a th:href="'https://sanguept.pt/verify-email?token=' + ${token}">
+            Verificar email
+        </a>
+    </p>
+    <p>Ou copie este código: <strong th:text="${token}"></strong></p>
+    <p>Este link expira em 24 horas.</p>
+</body>
+</html>

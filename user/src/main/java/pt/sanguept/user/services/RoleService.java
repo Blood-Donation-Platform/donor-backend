@@ -2,11 +2,13 @@ package pt.sanguept.user.services;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pt.sanguept.user.dtos.RoleRequest;
 import pt.sanguept.user.entities.Role;
 import pt.sanguept.user.entities.User;
 import pt.sanguept.user.repositories.RoleRepository;
 import pt.sanguept.user.repositories.UserRepository;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -58,6 +60,34 @@ public class RoleService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         return user.getRoles();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Role> findAll() {
+        return roleRepository.findAll();
+    }
+
+    public Role createRole(RoleRequest request) {
+        if (request.name() == null || request.name().isBlank()) {
+            throw new IllegalArgumentException("Role name is required");
+        }
+        if (!request.name().startsWith("ROLE_")) {
+            throw new IllegalArgumentException("Role name must start with ROLE_");
+        }
+        if (roleRepository.existsByName(request.name())) {
+            throw new IllegalArgumentException("Role already exists: " + request.name());
+        }
+        Role role = Role.builder()
+                .name(request.name())
+                .description(request.description())
+                .build();
+        return roleRepository.save(role);
+    }
+
+    public void deleteRole(UUID id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + id));
+        roleRepository.delete(role);
     }
 
 }

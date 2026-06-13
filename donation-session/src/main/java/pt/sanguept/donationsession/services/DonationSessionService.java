@@ -3,17 +3,23 @@ package pt.sanguept.donationsession.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pt.sanguept.donationlocation.dtos.MapBounds;
+import pt.sanguept.donationlocation.dtos.MapLocationDto;
+import pt.sanguept.donationlocation.mappers.DonationLocationMapper;
 import pt.sanguept.donationsession.dtos.DonationSessionFilter;
 import pt.sanguept.donationsession.dtos.DonationSessionRequestDto;
+import pt.sanguept.donationsession.dtos.LocationDetailDto;
 import pt.sanguept.donationsession.entities.DonationSession;
 import pt.sanguept.donationsession.enums.SessionStatus;
 import pt.sanguept.donationsession.events.SessionCancelledEvent;
 import pt.sanguept.donationsession.events.SessionCompletedEvent;
 import pt.sanguept.donationsession.events.SessionPublishedEvent;
+import pt.sanguept.donationsession.mappers.DonationSessionMapper;
 import pt.sanguept.donationsession.repositories.DonationSessionRepository;
 import pt.sanguept.donationlocation.repositories.DonationLocationRepository;
 
@@ -21,6 +27,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -161,6 +168,27 @@ public class DonationSessionService {
             eventPublisher.publishEvent(new SessionCompletedEvent(
                     session.getId(), session.getLocation().getId(), session.getStartAt(), session.getEndAt()));
         }
+    }
+
+    public List<MapLocationDto> getMapLocations(MapBounds bounds) {
+        var rows = donationLocationRepository.findMapLocationsInBounds(
+                bounds.swLat(), bounds.swLng(), bounds.neLat(), bounds.neLng());
+        return rows.stream()
+                .map(row -> new MapLocationDto(
+                        (UUID) row[0],
+                        (String) row[1],
+                        (Double) row[2],
+                        (Double) row[3]))
+                .toList();
+    }
+
+    public LocationDetailDto getLocationDetail(UUID id) {
+        var location = donationLocationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("DonationLocation not found: " + id));
+        var sessions = repository.findUpcomingByLocationId(id, PageRequest.of(0, 20));
+        return new LocationDetailDto(
+                DonationLocationMapper.toDto(location),
+                sessions.stream().map(DonationSessionMapper::toDto).toList());
     }
 
     static Specification<DonationSession> locationIdEq(UUID locationId) {

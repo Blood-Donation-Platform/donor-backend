@@ -44,4 +44,15 @@ public interface AdministrativeDivisionRepository extends BaseRepository<Adminis
             "AND ST_Contains(child.geometry, ST_SetSRID(ST_Point(:longitude, :latitude), 4326)))",
             nativeQuery = true)
     Optional<AdministrativeDivision> findLowestContainingDivision(@Param("latitude") double latitude, @Param("longitude") double longitude);
+
+    @Query(value = """
+        WITH RECURSIVE ancestors AS (
+            SELECT id, name, parent_id, 0 AS depth FROM administrative_division WHERE id = :childId
+            UNION ALL
+            SELECT p.id, p.name, p.parent_id, a.depth + 1 FROM administrative_division p
+            INNER JOIN ancestors a ON p.id = a.parent_id
+        )
+        SELECT id, name FROM ancestors WHERE depth > 0 ORDER BY depth DESC
+        """, nativeQuery = true)
+    List<Object[]> findAncestorRows(@Param("childId") UUID childId);
 }

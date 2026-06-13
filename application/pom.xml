@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>pt.sanguept</groupId>
-            <artifactId>identity</artifactId>
+            <artifactId>auth</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
         <dependency>
@@ -56,6 +56,16 @@
         <dependency>
             <groupId>pt.sanguept</groupId>
             <artifactId>donation-session</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>notification</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>notification-delivery</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
     </dependencies>

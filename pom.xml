@@ -27,10 +27,13 @@
 	    <module>common-core</module>
 	    <module>common-infra</module>
 	    <module>common-web</module>
-	    <module>identity</module>
+	    <module>auth</module>
 	    <module>user</module>
 	    <module>donation-location</module>
         <module>donation-session</module>
+	    <module>notification</module>
+	    <module>notification-delivery</module>
+        <module>communications</module>
     </modules>
     <scm>
 		<connection/>

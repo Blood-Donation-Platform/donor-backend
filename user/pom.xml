@@ -29,6 +29,11 @@
             <version>${sanguept.version}</version>
         </dependency>
         <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>common-web</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
