@@ -11,12 +11,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pt.sanguept.user.dtos.UpdateUserRequest;
 import pt.sanguept.user.dtos.UserDto;
-import pt.sanguept.user.entities.Role;
-import pt.sanguept.user.repositories.RoleRepository;
 import pt.sanguept.user.services.RoleService;
 import pt.sanguept.user.services.UserService;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,7 +25,6 @@ public class UserController {
 
     private final UserService userService;
     private final RoleService roleService;
-    private final RoleRepository roleRepository;
 
     @GetMapping
     public ResponseEntity<Page<UserDto>> list(@PageableDefault(size = 20) Pageable pageable) {
@@ -61,10 +57,5 @@ public class UserController {
     public ResponseEntity<Void> removeRole(@PathVariable UUID userId, @PathVariable String roleName) {
         roleService.removeRoleFromUser(userId, roleName);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/roles")
-    public ResponseEntity<List<Role>> listRoles() {
-        return ResponseEntity.ok(roleRepository.findAll());
     }
 }
