@@ -9,7 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>application</artifactId>
+    <artifactId>notification</artifactId>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
@@ -35,17 +35,12 @@
         </dependency>
         <dependency>
             <groupId>pt.sanguept</groupId>
-            <artifactId>territory</artifactId>
-            <version>${sanguept.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>pt.sanguept</groupId>
             <artifactId>user</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
         <dependency>
             <groupId>pt.sanguept</groupId>
-            <artifactId>auth</artifactId>
+            <artifactId>territory</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
         <dependency>
@@ -56,16 +51,6 @@
         <dependency>
             <groupId>pt.sanguept</groupId>
             <artifactId>donation-session</artifactId>
-            <version>${sanguept.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>pt.sanguept</groupId>
-            <artifactId>notification</artifactId>
-            <version>${sanguept.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>pt.sanguept</groupId>
-            <artifactId>notification-delivery</artifactId>
             <version>${sanguept.version}</version>
         </dependency>
     </dependencies>

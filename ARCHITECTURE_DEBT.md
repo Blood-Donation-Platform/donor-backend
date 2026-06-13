@@ -216,7 +216,7 @@ spring.jpa.properties.hibernate.order_inserts: true
 Define the interface in `donation-notification`:
 
 ```java
-// pt.sanguept.donationnotification.services.TerritoryHierarchyQuery
+// pt.sanguept.notification.services.TerritoryHierarchyQuery
 public interface TerritoryHierarchyQuery {
     Set<UUID> resolveDivisionHierarchy(UUID divisionId);
 }
