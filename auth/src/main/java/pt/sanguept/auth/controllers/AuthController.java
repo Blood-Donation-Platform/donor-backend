@@ -1,5 +1,7 @@
 package pt.sanguept.auth.controllers;
 
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +13,11 @@ import pt.sanguept.auth.dtos.RefreshRequest;
 import pt.sanguept.auth.dtos.TokenPairResponse;
 import pt.sanguept.auth.services.AuthService;
 import pt.sanguept.auth.services.JwtService;
+import pt.sanguept.user.dtos.CreateUserRequest;
+import pt.sanguept.user.dtos.UserDto;
+import pt.sanguept.user.mappers.UserMapper;
+import pt.sanguept.user.services.RoleService;
+import pt.sanguept.user.services.UserService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -18,10 +25,22 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final UserService userService;
+    private final RoleService roleService;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService, JwtService jwtService,
+                          UserService userService, RoleService roleService) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.userService = userService;
+        this.roleService = roleService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserDto> register(@Valid @RequestBody CreateUserRequest request) {
+        var user = userService.createUser(request);
+        roleService.assignRoleToUser(user.getId(), "ROLE_USER");
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toDto(user));
     }
 
     @PostMapping("/login")
