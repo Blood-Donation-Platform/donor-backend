@@ -72,7 +72,7 @@ public class AdministrativeDivisionController {
 
     @GetMapping("/{id}/ancestors")
     public ResponseEntity<List<AdministrativeDivisionDto>> getAncestors(@PathVariable UUID id) {
-        return ResponseEntity.ok(AdministrativeDivisionMapper.toDtoList(service.findAncestors(id)));
+        return ResponseEntity.ok(service.findAncestors(id));
     }
 
     @GetMapping("/coordinates")

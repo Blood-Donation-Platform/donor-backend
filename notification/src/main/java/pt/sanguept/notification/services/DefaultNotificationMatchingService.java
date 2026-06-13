@@ -46,8 +46,8 @@ public class DefaultNotificationMatchingService implements NotificationMatchingS
         AdministrativeDivision sessionDivision = session.getLocation().getAdministrativeDivision();
         Set<UUID> divisionIds = new HashSet<>();
         divisionIds.add(sessionDivision.getId());
-        for (AdministrativeDivision ancestor : divisionService.findAncestors(sessionDivision.getId())) {
-            divisionIds.add(ancestor.getId());
+        for (var ancestor : divisionService.findAncestors(sessionDivision.getId())) {
+            divisionIds.add(ancestor.id());
         }
 
         List<NotificationSubscription> matching = subscriptionRepository.findMatchingAdminSubscriptions(divisionIds);

@@ -16,7 +16,6 @@ import pt.sanguept.territory.mappers.AdministrativeDivisionMapper;
 import pt.sanguept.territory.repositories.AdministrativeDivisionRepository;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,10 +42,10 @@ public class DivisionService {
 		return repository.findById(childId).map(AdministrativeDivision::getParent);
 	}
 
-	public List<AdministrativeDivision> findAncestors(UUID childId) {
-		return repository.findById(childId)
-				.map(this::collectAncestors)
-				.orElseGet(Collections::emptyList);
+	public List<AdministrativeDivisionDto> findAncestors(UUID childId) {
+		return repository.findAncestorRows(childId).stream()
+				.map(row -> new AdministrativeDivisionDto((UUID) row[0], (String) row[1], null, null))
+				.toList();
 	}
 
 	public List<DivisionSelectorDto> searchSelector(String query, int size) {
@@ -106,23 +105,12 @@ public class DivisionService {
 	private List<DivisionSelectorDto> toSelectorDtoList(List<AdministrativeDivision> divisions) {
 		return divisions.stream()
 				.map(d -> {
-					var ancestors = collectAncestors(d).stream()
-							.map(a -> new AncestorDto(a.getId(), a.getName()))
+					var ancestors = repository.findAncestorRows(d.getId()).stream()
+							.map(row -> new AncestorDto((UUID) row[0], (String) row[1]))
 							.toList();
 					return new DivisionSelectorDto(d.getId(), d.getName(), ancestors, ancestors.size());
 				})
 				.toList();
-	}
-
-	private List<AdministrativeDivision> collectAncestors(AdministrativeDivision division) {
-		List<AdministrativeDivision> ancestors = new ArrayList<>();
-		AdministrativeDivision current = division.getParent();
-		while (current != null) {
-			ancestors.add(current);
-			current = current.getParent();
-		}
-		Collections.reverse(ancestors);
-		return ancestors;
 	}
 }
 

@@ -16,6 +16,7 @@ import pt.sanguept.notification.enums.SubscriptionType;
 import pt.sanguept.notification.repositories.NotificationPreferenceRepository;
 import pt.sanguept.notification.repositories.NotificationSubscriptionRepository;
 import pt.sanguept.donationsession.entities.DonationSession;
+import pt.sanguept.territory.dtos.AdministrativeDivisionDto;
 import pt.sanguept.territory.entities.AdministrativeDivision;
 import pt.sanguept.territory.services.DivisionService;
 
@@ -90,7 +91,7 @@ class DefaultNotificationMatchingServiceTest {
     void shouldMatchUserWithSubscriptionForParentDivision() {
         var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
         var aveiroDiv = adminDivision(DIV_AVEIRO);
-        var parentDiv = adminDivision(DIV_AVEIRO_PARENT);
+        var parentDiv = adminDivisionDto(DIV_AVEIRO_PARENT);
         var sub = adminSubscription(USER_PORTO, DIV_AVEIRO_PARENT);
         setupAdminMatchingWithAncestors(session, aveiroDiv, Set.of(DIV_AVEIRO, DIV_AVEIRO_PARENT),
                 List.of(parentDiv), List.of(sub));
@@ -103,9 +104,8 @@ class DefaultNotificationMatchingServiceTest {
     @Test
     void shouldMatchUserWithSubscriptionForPortugal() {
         var session = sessionAt(DIV_AVEIRO, 40.64, -8.65);
-        var aveiroDiv = adminDivision(DIV_AVEIRO);
-        var aveiroParent = adminDivision(DIV_AVEIRO_PARENT);
-        var portugalDiv = adminDivision(DIV_PORTUGAL);
+        var aveiroParent = adminDivisionDto(DIV_AVEIRO_PARENT);
+        var portugalDiv = adminDivisionDto(DIV_PORTUGAL);
         var sub = adminSubscription(USER_PORTO, DIV_PORTUGAL);
         when(divisionService.findAncestors(DIV_AVEIRO)).thenReturn(List.of(aveiroParent, portugalDiv));
         when(subscriptionRepository.findMatchingAdminSubscriptions(
@@ -271,7 +271,7 @@ class DefaultNotificationMatchingServiceTest {
 
     private void setupAdminMatchingWithAncestors(DonationSession session, AdministrativeDivision division,
                                                   Set<UUID> divisionIds,
-                                                  List<AdministrativeDivision> ancestors,
+                                                  List<AdministrativeDivisionDto> ancestors,
                                                   List<NotificationSubscription> subs) {
         when(divisionService.findAncestors(division.getId())).thenReturn(ancestors);
         when(subscriptionRepository.findMatchingAdminSubscriptions(divisionIds)).thenReturn(subs);
@@ -293,6 +293,10 @@ class DefaultNotificationMatchingServiceTest {
         division.setId(id);
         division.setName("Division-" + id.toString().substring(0, 8));
         return division;
+    }
+
+    private AdministrativeDivisionDto adminDivisionDto(UUID id) {
+        return new AdministrativeDivisionDto(id, "Division-" + id.toString().substring(0, 8), null, null);
     }
 
     private NotificationSubscription adminSubscription(UUID userId, UUID divisionId) {
