@@ -1,0 +1,21 @@
+spring:
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  communications:
+    email:
+      from: ${EMAIL_FROM}
+
+logging:
+  level:
+    pt.sanguept.communications: INFO
