@@ -29,6 +29,10 @@ public class UserService {
     }
 
     public User createUser(CreateUserRequest request) {
+        return createUser(request, false);
+    }
+
+    public User createUser(CreateUserRequest request, boolean enabled) {
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already in use: " + request.email());
         }
@@ -38,7 +42,7 @@ public class UserService {
                 .passwordHash(passwordEncoder.encode(request.rawPassword()))
                 .firstName(request.firstName())
                 .lastName(request.lastName())
-                .enabled(true)
+                .enabled(enabled)
                 .build();
 
         return userRepository.save(user);
@@ -73,6 +77,13 @@ public class UserService {
     public User enableUser(UUID id) {
         User user = findById(id);
         user.setEnabled(true);
+        return userRepository.save(user);
+    }
+
+    public User changePassword(UUID id, String newPassword) {
+        User user = findById(id);
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setAuthVersion(user.getAuthVersion() + 1);
         return userRepository.save(user);
     }
 

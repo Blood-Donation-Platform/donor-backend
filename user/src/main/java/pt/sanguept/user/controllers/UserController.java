@@ -6,11 +6,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import pt.sanguept.user.dtos.CreateUserRequest;
 import pt.sanguept.user.dtos.UpdateUserRequest;
 import pt.sanguept.user.dtos.UserDto;
+import pt.sanguept.user.mappers.UserMapper;
 import pt.sanguept.user.services.RoleService;
 import pt.sanguept.user.services.UserService;
 
@@ -29,6 +32,14 @@ public class UserController {
     @GetMapping
     public ResponseEntity<Page<UserDto>> list(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(userService.list(pageable));
+    }
+
+    @PostMapping
+    public ResponseEntity<UserDto> create(@Valid @RequestBody CreateUserRequest request,
+                                          @RequestParam(defaultValue = "true") boolean enabled) {
+        var user = userService.createUser(request, enabled);
+        roleService.assignRoleToUser(user.getId(), "ROLE_USER");
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toDto(user));
     }
 
     @GetMapping("/{id}")

@@ -42,6 +42,11 @@
             <version>${sanguept.version}</version>
         </dependency>
         <dependency>
+            <groupId>pt.sanguept</groupId>
+            <artifactId>communications</artifactId>
+            <version>${sanguept.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
