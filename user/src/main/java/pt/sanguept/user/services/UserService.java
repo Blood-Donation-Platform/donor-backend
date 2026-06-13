@@ -5,7 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pt.sanguept.user.dtos.ChangePasswordRequest;
 import pt.sanguept.user.dtos.CreateUserRequest;
+import pt.sanguept.user.dtos.UpdateProfileRequest;
 import pt.sanguept.user.dtos.UpdateUserRequest;
 import pt.sanguept.user.dtos.UserDto;
 import pt.sanguept.user.entities.Role;
@@ -115,6 +117,30 @@ public class UserService {
     public void softDelete(UUID id) {
         User user = findById(id);
         user.setEnabled(false);
+        user.setAuthVersion(user.getAuthVersion() + 1);
+        userRepository.save(user);
+    }
+
+    public UserDto updateProfile(UUID id, UpdateProfileRequest request) {
+        User user = findById(id);
+        if (request.firstName() != null) {
+            user.setFirstName(request.firstName());
+        }
+        if (request.lastName() != null) {
+            user.setLastName(request.lastName());
+        }
+        return UserMapper.toDto(userRepository.save(user));
+    }
+
+    public void changePasswordWithVerification(UUID id, ChangePasswordRequest request) {
+        User user = findById(id);
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        if (request.currentPassword().equals(request.newPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         user.setAuthVersion(user.getAuthVersion() + 1);
         userRepository.save(user);
     }
