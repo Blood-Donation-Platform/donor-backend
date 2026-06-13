@@ -33,7 +33,8 @@
         <module>donation-session</module>
 	    <module>notification</module>
 	    <module>notification-delivery</module>
-	</modules>
+        <module>communications</module>
+    </modules>
     <scm>
 		<connection/>
 		<developerConnection/>
