@@ -8,10 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import pt.sanguept.auth.dtos.*;
 import pt.sanguept.auth.services.AuthService;
 import pt.sanguept.auth.services.JwtService;
+import pt.sanguept.auth.services.RegistrationService;
 import pt.sanguept.auth.services.VerificationTokenService;
 import pt.sanguept.user.dtos.CreateUserRequest;
-import pt.sanguept.user.services.RoleService;
-import pt.sanguept.user.services.UserService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -22,25 +21,21 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
-    private final UserService userService;
-    private final RoleService roleService;
+    private final RegistrationService registrationService;
     private final VerificationTokenService tokenService;
 
     public AuthController(AuthService authService, JwtService jwtService,
-                          UserService userService, RoleService roleService,
+                          RegistrationService registrationService,
                           VerificationTokenService tokenService) {
         this.authService = authService;
         this.jwtService = jwtService;
-        this.userService = userService;
-        this.roleService = roleService;
+        this.registrationService = registrationService;
         this.tokenService = tokenService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@Valid @RequestBody CreateUserRequest request) {
-        var user = userService.createUser(request);
-        roleService.assignRoleToUser(user.getId(), "ROLE_USER");
-        tokenService.createAndSendVerificationEmail(user);
+        registrationService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("message", "Registration successful. Check your email to verify your account."));
     }

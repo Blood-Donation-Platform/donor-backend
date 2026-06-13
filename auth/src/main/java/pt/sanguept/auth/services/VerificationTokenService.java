@@ -11,7 +11,6 @@ import pt.sanguept.user.entities.User;
 import pt.sanguept.user.services.UserService;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,19 +23,23 @@ public class VerificationTokenService {
     private final UserService userService;
     private final EmailService emailService;
 
-    public VerificationToken createAndSendVerificationEmail(User user) {
-        VerificationToken token = createToken(user.getId(), TokenType.EMAIL_VERIFICATION);
-        emailService.sendTemplate(user.getEmail(), "verify-email", Map.of(
-                "firstName", user.getFirstName() != null ? user.getFirstName() : "",
-                "token", token.getToken()
-        ));
-        return token;
+    public VerificationToken createToken(UUID userId, TokenType type, Instant expiresAt) {
+        VerificationToken token = VerificationToken.builder()
+                .token(UUID.randomUUID().toString())
+                .userId(userId)
+                .type(type)
+                .expiresAt(expiresAt)
+                .build();
+        return tokenRepository.save(token);
     }
 
     public void createAndSendPasswordResetEmail(String email) {
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("No account found with this email"));
-        VerificationToken token = createToken(user.getId(), TokenType.PASSWORD_RESET);
+        User user = userService.findByEmail(email).orElse(null);
+        if (user == null) {
+            return;
+        }
+        VerificationToken token = createToken(user.getId(), TokenType.PASSWORD_RESET,
+                Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
         emailService.sendTemplate(email, "reset-password", Map.of(
                 "firstName", user.getFirstName() != null ? user.getFirstName() : "",
                 "token", token.getToken()
@@ -60,17 +63,12 @@ public class VerificationTokenService {
 
     public void sendVerificationEmailForUser(UUID userId) {
         User user = userService.findById(userId);
-        createAndSendVerificationEmail(user);
-    }
-
-    private VerificationToken createToken(UUID userId, TokenType type) {
-        VerificationToken token = VerificationToken.builder()
-                .token(UUID.randomUUID().toString())
-                .userId(userId)
-                .type(type)
-                .expiresAt(Instant.now().plus(24, ChronoUnit.HOURS))
-                .build();
-        return tokenRepository.save(token);
+        VerificationToken token = createToken(user.getId(), TokenType.EMAIL_VERIFICATION,
+                Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
+        emailService.sendTemplate(user.getEmail(), "verify-email", Map.of(
+                "firstName", user.getFirstName() != null ? user.getFirstName() : "",
+                "token", token.getToken()
+        ));
     }
 
     private VerificationToken validateToken(String tokenValue, TokenType expectedType) {
