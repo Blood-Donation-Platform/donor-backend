@@ -20,7 +20,7 @@ import pt.sanguept.user.services.UserService;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "User Management", description = "Endpoints for managing users (admin only).")

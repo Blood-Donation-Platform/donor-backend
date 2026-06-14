@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/public/divisions")
+@RequestMapping("/api/v1/divisions")
 @RequiredArgsConstructor
 @Tag(name = "Administrative Divisions", description = "Endpoints for administrative divisions.")
 public class AdministrativeDivisionController {

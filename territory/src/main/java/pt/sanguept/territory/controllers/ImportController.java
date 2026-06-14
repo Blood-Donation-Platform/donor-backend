@@ -18,7 +18,7 @@ import java.io.InputStream;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequestMapping("/api/v1")
 @PreAuthorize("hasAuthority('IMPORT_DATA')")
 @RequiredArgsConstructor
 @Tag(name = "Imports", description = "Endpoints for importing data.")
